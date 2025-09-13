@@ -5,250 +5,46 @@
   <title>感情シャッターカメラ - アルバム付き</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <style>
-    body { 
-      font-family: 'Arial', sans-serif; 
-      margin: 0; 
-      background: #2c3e50; 
-      color: #ecf0f1; 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      justify-content: flex-start; 
-      min-height: 100vh; 
-      overflow-x: hidden; /* 横方向のスクロールを禁止 */
-      padding: 0; 
-      box-sizing: border-box; 
-    }
-
-    /* 全体のコンテナ */
-    #app-container {
-      width: 100%;
-      max-width: 800px; /* 全体的な最大幅 */
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      flex-grow: 1; /* 親要素いっぱいに広がる */
-    }
-
-    /* タブ切り替えボタン */
-    #tab-selector {
-      display: flex;
-      width: 100%;
-      background-color: #34495e;
-      border-bottom: 2px solid #f39c12;
-    }
-    .tab-button {
-      flex-grow: 1;
-      padding: 15px 0;
-      background-color: transparent;
-      color: #ecf0f1;
-      border: none;
-      font-size: 18px;
-      cursor: pointer;
-      transition: background-color 0.3s, color 0.3s;
-    }
-    .tab-button:hover {
-      background-color: #4a627a;
-    }
-    .tab-button.active {
-      background-color: #f39c12;
-      color: #2c3e50;
-      font-weight: bold;
-    }
-
-    /* 各タブのコンテンツ */
-    .tab-content {
-      width: 100%;
-      flex-grow: 1;
-      display: none; /* デフォルトで非表示 */
-      padding: 15px;
-      box-sizing: border-box;
-      overflow-y: auto; /* コンテンツがはみ出したらスクロール */
-    }
-    .tab-content.active {
-      display: flex; /* アクティブなタブだけ表示 */
-      flex-direction: column;
-      align-items: center;
-    }
-
-    /* カメラモード */
+    body { font-family: 'Arial', sans-serif; margin: 0; background: #2c3e50; color: #ecf0f1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; overflow-x: hidden; padding: 0; box-sizing: border-box; }
+    #app-container { width: 100%; max-width: 800px; display: flex; flex-direction: column; align-items: center; flex-grow: 1; }
+    #tab-selector { display: flex; width: 100%; background-color: #34495e; border-bottom: 2px solid #f39c12; }
+    .tab-button { flex-grow: 1; padding: 15px 0; background-color: transparent; color: #ecf0f1; border: none; font-size: 18px; cursor: pointer; transition: background-color 0.3s, color 0.3s; }
+    .tab-button.active { background-color: #f39c12; color: #2c3e50; font-weight: bold; }
+    .tab-content { width: 100%; flex-grow: 1; display: none; padding: 15px; box-sizing: border-box; overflow-y: auto; }
+    .tab-content.active { display: flex; flex-direction: column; align-items: center; }
     #camera-mode #info-text { font-size: 24px; font-weight: bold; margin-bottom: 5px; color: #f39c12; height: 30px; }
     #camera-mode #emoji-display { font-size: 50px; margin-bottom: 15px; height: 60px; line-height: 1; }
     #emotion-selector { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 15px; width: 100%; }
-    .emotion-button { 
-      background-color: #3498db; color: white; border: none; border-radius: 8px; 
-      padding: 10px 15px; font-size: 16px; cursor: pointer; transition: background-color 0.3s;
-      flex: 1 1 auto; /* ボタンが自動で幅を調整 */
-      min-width: 100px; /* ボタンの最小幅 */
-      max-width: 150px; /* ボタンの最大幅 */
-    }
-    .emotion-button:hover, .emotion-button.active { background-color: #2980b9; }
+    .emotion-button { background-color: #3498db; color: white; border: none; border-radius: 8px; padding: 10px 15px; font-size: 16px; cursor: pointer; flex: 1 1 auto; min-width: 100px; max-width: 150px; }
     .emotion-button:disabled { background-color: #555; cursor: not-allowed; }
-
-    /* カメラ表示領域の拡大 */
-    #video-container { 
-      position: relative; 
-      width: 100%; /* 親要素いっぱいに広がる */
-      max-width: 600px; /* 最大幅を設ける */
-      border-radius: 15px; 
-      overflow: hidden; 
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4); 
-      background-color: #34495e; 
-      flex-grow: 1; /* 残りのスペースを埋める */
-      display: flex; /* 中央寄せのため */
-      justify-content: center;
-      align-items: center;
-    }
-    #video-container::before { content: ''; display: block; padding-top: calc(3 / 4 * 100%); /* 4:3のアスペクト比を維持 */ }
-    video, canvas { 
-      position: absolute; 
-      top: 0; 
-      left: 0; 
-      width: 100%; 
-      height: 100%; 
-      object-fit: cover; 
-      transform: scaleX(-1); /* ビデオとキャンバスの両方を左右反転させる */
-    }
-    /* 撮影時のフラッシュ */
-    .flash {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: white;
-      opacity: 0;
-      z-index: 20;
-      animation: flashAnimation 0.3s ease-out forwards;
-    }
-    @keyframes flashAnimation {
-      0% { opacity: 0; }
-      50% { opacity: 1; }
-      100% { opacity: 0; }
-    }
-
-    /* アルバムモード */
-    #album-mode { 
-      display: none; 
-      flex-wrap: wrap; 
-      justify-content: center; 
-      gap: 15px; 
-      padding: 20px 0;
-      width: 100%;
-    }
-    .gallery-item {
-      background-color: #34495e;
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-      width: 150px; /* アルバム内の写真の幅 */
-      cursor: pointer;
-      position: relative;
-      transition: transform 0.2s;
-    }
-    .gallery-item:hover {
-      transform: translateY(-5px);
-    }
-    .gallery-item img {
-      width: 100%;
-      height: 100px; /* アルバム内の写真の高さ */
-      object-fit: cover;
-      display: block;
-    }
-    .gallery-info {
-      padding: 8px;
-      font-size: 12px;
-      color: #ecf0f1;
-      text-align: center;
-    }
-    .gallery-info .emotion-label {
-      font-weight: bold;
-      color: #f39c12;
-    }
-    .no-photos-message {
-        color: #95a5a6;
-        font-size: 18px;
-        text-align: center;
-        margin-top: 50px;
-    }
-    
-    /* 拡大表示モーダル */
-    #modal {
-      display: none; /* Hidden by default */
-      position: fixed; /* Stay in place */
-      z-index: 100; /* Sit on top */
-      left: 0;
-      top: 0;
-      width: 100%; /* Full width */
-      height: 100%; /* Full height */
-      overflow: auto; /* Enable scroll if needed */
-      background-color: rgba(0,0,0,0.8); /* Black w/ opacity */
-      justify-content: center;
-      align-items: center;
-    }
-    #modal-content {
-      margin: auto;
-      display: block;
-      max-width: 90vw;
-      max-height: 90vh;
-      border-radius: 10px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.7);
-    }
-    #modal-caption {
-      margin: 10px auto;
-      display: block;
-      width: 80%;
-      max-width: 700px;
-      text-align: center;
-      color: #ccc;
-      padding: 10px 0;
-      font-size: 16px;
-    }
-    #modal-close, #modal-download, #modal-delete {
-      position: absolute;
-      top: 15px;
-      color: #f1f1f1;
-      font-size: 30px;
-      font-weight: bold;
-      transition: 0.3s;
-      cursor: pointer;
-      background: rgba(0,0,0,0.5);
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+    #video-container { position: relative; width: 100%; max-width: 600px; border-radius: 15px; overflow: hidden; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4); background-color: #34495e; flex-grow: 1; display: flex; justify-content: center; align-items: center; }
+    #video-container::before { content: ''; display: block; padding-top: calc(3 / 4 * 100%); }
+    video, canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+    .flash { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: white; opacity: 0; z-index: 20; animation: flashAnimation 0.3s ease-out forwards; }
+    @keyframes flashAnimation { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
+    #album-mode { display: none; flex-wrap: wrap; justify-content: center; gap: 15px; padding: 20px 0; width: 100%; }
+    .gallery-item { background-color: #34495e; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); width: 150px; cursor: pointer; position: relative; transition: transform 0.2s; }
+    .gallery-item:hover { transform: translateY(-5px); }
+    .gallery-item img { width: 100%; height: 100px; object-fit: cover; display: block; }
+    .gallery-info { padding: 8px; font-size: 12px; text-align: center; }
+    .gallery-info .emotion-label { font-weight: bold; color: #f39c12; }
+    .no-photos-message { color: #95a5a6; font-size: 18px; text-align: center; margin-top: 50px; }
+    #modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); justify-content: center; align-items: center; }
+    #modal-content { display: block; max-width: 90vw; max-height: 90vh; border-radius: 10px; }
+    #modal-caption { margin: 10px auto; display: block; width: 80%; text-align: center; color: #ccc; padding: 10px 0; font-size: 16px; }
+    #modal-close, #modal-download, #modal-delete { position: absolute; top: 15px; color: #f1f1f1; font-size: 30px; transition: 0.3s; cursor: pointer; background: rgba(0,0,0,0.5); border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; }
     #modal-close { right: 15px; }
     #modal-download { right: 70px; font-size: 24px; padding-top: 5px;}
     #modal-delete { right: 125px; font-size: 24px; padding-top: 5px;}
-    #modal-close:hover, #modal-download:hover, #modal-delete:hover { color: #f39c12; background: rgba(0,0,0,0.7); }
-
-    /* スマホ対応 */
-    @media (max-width: 600px) {
-      #tab-selector { font-size: 16px; }
-      .emotion-button { font-size: 14px; padding: 8px 12px; min-width: 80px; }
-      #camera-mode #info-text { font-size: 20px; }
-      #camera-mode #emoji-display { font-size: 40px; }
-      .gallery-item { width: 120px; }
-      .gallery-item img { height: 80px; }
-      #modal-download, #modal-delete { font-size: 20px; width: 35px; height: 35px; top: 10px; }
-      #modal-close { font-size: 25px; width: 35px; height: 35px; top: 10px; right: 10px; }
-      #modal-download { right: 55px; }
-      #modal-delete { right: 100px; }
-    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 </head>
-
 <body>
   <div id="app-container">
     <div id="tab-selector">
       <button class="tab-button active" data-tab="camera-mode">📸 カメラ</button>
       <button class="tab-button" data-tab="album-mode">🖼️ アルバム</button>
     </div>
-
     <div id="camera-mode" class="tab-content active">
       <div id="info-text">撮影したい感情を選んでください</div>
       <div id="emoji-display">👇</div>
@@ -264,33 +60,26 @@
         <div id="flash-overlay"></div>
       </div>
     </div>
-
     <div id="album-mode" class="tab-content">
-      <div id="album-gallery">
-        <p class="no-photos-message">まだ写真がありません。</p>
-      </div>
+      <div id="album-gallery"></div>
     </div>
   </div>
-
   <div id="modal">
     <span id="modal-close">&times;</span>
     <span id="modal-delete">🗑️</span>
-    <span id="modal-download">⬇️</span>
+    <a id="modal-download">⬇️</a>
     <img id="modal-content">
     <div id="modal-caption"></div>
   </div>
-
   <script>
     const video = document.getElementById('input_video');
     const infoText = document.getElementById('info-text');
     const emojiDisplay = document.getElementById('emoji-display');
     const emotionSelector = document.getElementById('emotion-selector');
     const flashOverlay = document.getElementById('flash-overlay');
-
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
     const albumGallery = document.getElementById('album-gallery');
-
     const modal = document.getElementById('modal');
     const modalImg = document.getElementById('modal-content');
     const modalCaption = document.getElementById('modal-caption');
@@ -298,68 +87,44 @@
     const modalDownload = document.getElementById('modal-download');
     const modalDelete = document.getElementById('modal-delete');
 
-    let targetEmotion = null;
-    let isCapturing = false;
-    let photos = []; // 撮影した写真を保存する配列
+    let targetEmotion = null, isCapturing = false, photos = [];
+    const emotionPrompts = {"happy": "最高の笑顔を見せて！ 😊", "sad": "悲しい顔をして… 😔", "angry": "怒った顔！ 😠", "surprised": "驚いた顔で！ 😮"};
+    const emotionEmojis = {"happy": "😊", "sad": "😔", "angry": "😠", "surprised": "😮", "neutral": "😐", "fearful": "😨", "disgusted": "🤢", "No Face": "🤔"};
 
-    const emotionPrompts = {
-      "happy": "最高の笑顔を見せて！ 😊", "sad": "悲しい顔をして… 😔", "angry": "怒った顔！ 😠", "surprised": "驚いた顔で！ 😮"
-    };
-    const emotionEmojis = { 
-      "happy": "😊", "sad": "😔", "angry": "😠", "surprised": "😮",
-      "neutral": "😐", "fearful": "😨", "disgusted": "🤢", "No Face": "🤔"
-    };
-
-    // --- ローカルストレージからの読み込みと保存 ---
     function loadPhotos() {
-      const storedPhotos = localStorage.getItem('emotionPhotos');
-      if (storedPhotos) {
-        photos = JSON.parse(storedPhotos);
-      }
+      try {
+        const storedPhotos = localStorage.getItem('emotionPhotos');
+        if (storedPhotos) photos = JSON.parse(storedPhotos);
+      } catch (e) { console.error("Could not load photos from localStorage", e); }
       renderAlbum();
     }
-
     function savePhotos() {
-      localStorage.setItem('emotionPhotos', JSON.stringify(photos));
+      try {
+        localStorage.setItem('emotionPhotos', JSON.stringify(photos));
+      } catch (e) { console.error("Could not save photos to localStorage", e); }
     }
-
-    // --- アルバムのレンダリング ---
     function renderAlbum() {
-      albumGallery.innerHTML = ''; // 一度すべてクリア
+      albumGallery.innerHTML = '';
       if (photos.length === 0) {
         albumGallery.innerHTML = '<p class="no-photos-message">まだ写真がありません。</p>';
         return;
       }
       const fragment = document.createDocumentFragment();
       photos.forEach((photo, index) => {
-        const galleryItem = document.createElement('div');
-        galleryItem.classList.add('gallery-item');
-        galleryItem.dataset.index = index; // 削除用にインデックスを保存
-
+        const item = document.createElement('div');
+        item.className = 'gallery-item';
+        item.dataset.index = index;
         const img = document.createElement('img');
         img.src = photo.dataUrl;
-        img.alt = photo.emotion + ' - ' + new Date(photo.timestamp).toLocaleString();
-
         const info = document.createElement('div');
-        info.classList.add('gallery-info');
-        const emotionLabel = document.createElement('span');
-        emotionLabel.classList.add('emotion-label');
-        emotionLabel.textContent = emotionEmojis[photo.emotion] + ' ' + photo.emotion;
-        const timeLabel = document.createElement('div');
-        timeLabel.textContent = new Date(photo.timestamp).toLocaleDateString() + ' ' + new Date(photo.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-        info.appendChild(emotionLabel);
-        info.appendChild(timeLabel);
-        galleryItem.appendChild(img);
-        galleryItem.appendChild(info);
-
-        galleryItem.addEventListener('click', () => openModal(photo, index));
-        fragment.appendChild(galleryItem);
+        info.className = 'gallery-info';
+        info.innerHTML = `<span class="emotion-label">${emotionEmojis[photo.emotion]} ${photo.emotion}</span><div>${new Date(photo.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</div>`;
+        item.append(img, info);
+        item.addEventListener('click', () => openModal(photo, index));
+        fragment.appendChild(item);
       });
       albumGallery.appendChild(fragment);
     }
-
-    // --- 拡大表示モーダル ---
     let currentPhotoIndex = null;
     function openModal(photo, index) {
       modal.style.display = 'flex';
@@ -369,181 +134,102 @@
       modalDownload.download = `emotion_photo_${photo.emotion}_${new Date(photo.timestamp).toISOString()}.jpg`;
       currentPhotoIndex = index;
     }
-
     modalClose.onclick = () => { modal.style.display = 'none'; };
-    window.onclick = (event) => {
-      if (event.target == modal) {
+    modalDelete.onclick = () => {
+      if (confirm('この写真を削除してもよろしいですか？')) {
+        photos.splice(currentPhotoIndex, 1);
+        savePhotos();
+        renderAlbum();
         modal.style.display = 'none';
       }
     };
-    modalDelete.onclick = () => {
-      if (confirm('この写真を削除してもよろしいですか？')) {
-        photos.splice(currentPhotoIndex, 1); // 配列から削除
-        savePhotos(); // ローカルストレージを更新
-        renderAlbum(); // アルバムを再描画
-        modal.style.display = 'none'; // モーダルを閉じる
-      }
-    };
-
-
-    // --- 1. モデル読み込みとカメラ起動 ---
     Promise.all([
       faceapi.nets.tinyFaceDetector.loadFromUri('./models'),
       faceapi.nets.faceLandmark68Net.loadFromUri('./models'),
       faceapi.nets.faceExpressionNet.loadFromUri('./models')
-    ]).then(startVideo)
-      .catch(err => {
-        infoText.innerText = "エラー: AIモデル読込失敗";
-        emojiDisplay.innerText = "📁❓";
-        console.error("AIモデルの読み込みに失敗しました: ", err);
-      });
-
+    ]).then(startVideo).catch(err => {
+      infoText.innerText = "エラー: AIモデル読込失敗";
+      emojiDisplay.innerText = "📁❓";
+    });
     function startVideo() {
       navigator.mediaDevices.getUserMedia({ video: {} })
         .then(stream => { video.srcObject = stream; })
-        .catch(err => {
-          infoText.innerText = "エラー: カメラ起動失敗";
-          emojiDisplay.innerText = "🚫";
-          console.error("カメラの起動に失敗しました: ", err);
-        });
+        .catch(err => { infoText.innerText = "エラー: カメラ起動失敗"; emojiDisplay.innerText = "🚫"; });
     }
-
-    // --- 2. 撮影ロジック ---
     function takePhoto() {
-      const captureCanvas = document.createElement('canvas');
-      captureCanvas.width = video.videoWidth;
-      captureCanvas.height = video.videoHeight;
-      const ctx = captureCanvas.getContext('2d');
-      
-      ctx.translate(captureCanvas.width, 0);
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
-      ctx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
-      
-      const dataUrl = captureCanvas.toDataURL('image/jpeg', 0.9); // 画質を90%に設定
-
-      // 写真データを配列に追加
-      photos.push({
-        dataUrl: dataUrl,
-        emotion: targetEmotion,
-        timestamp: new Date().toISOString()
-      });
-      savePhotos(); // ローカルストレージに保存
-
-      // 撮影時のフラッシュ効果
-      flashOverlay.style.animation = 'none'; // アニメーションをリセット
-      void flashOverlay.offsetWidth; // 強制的にリフロー
-      flashOverlay.style.animation = 'flashAnimation 0.3s ease-out forwards';
-
-      // 撮影状態をリセット
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      photos.push({ dataUrl, emotion: targetEmotion, timestamp: new Date().toISOString() });
+      savePhotos();
+      flashOverlay.className = 'flash';
+      flashOverlay.addEventListener('animationend', () => { flashOverlay.className = ''; }, { once: true });
       setTimeout(() => {
         isCapturing = false;
         targetEmotion = null;
         infoText.innerText = "撮影したい感情を選んでください";
         emojiDisplay.innerText = "👇";
-        emotionSelector.querySelectorAll('button').forEach(b => b.disabled = false);
-      }, 2000); // 2秒後にリセット
+        emotionSelector.querySelectorAll('button').forEach(b => { b.disabled = false; b.classList.remove('active'); });
+      }, 2000);
     }
-
-    // --- 3. 認識ループ ---
     video.addEventListener('play', () => {
-      const canvas = faceapi.createCanvasFromMedia(video);
-      document.getElementById('video-container').append(canvas);
+      const canvas = document.getElementById('output_canvas');
       const displaySize = { width: video.clientWidth, height: video.clientHeight };
       faceapi.matchDimensions(canvas, displaySize);
-
       setInterval(async () => {
-        if (!targetEmotion || isCapturing || !video.srcObject) return; // 選択されていない、撮影中、カメラ未起動ならスキップ
-
-        const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
-        
-        // 描画をクリアして、ビデオ映像はCSSで直接表示されるように
-        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-        
+        if (!targetEmotion || isCapturing || !video.srcObject) return;
+        const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
         if (detections && detections.length > 0) {
-          const resizedDetections = faceapi.resizeResults(detections, displaySize);
-          
           let highestEmotion = "neutral";
           let highestValue = 0;
-          const expressions = resizedDetections[0].expressions;
+          const expressions = detections[0].expressions;
           for (const emotion in expressions) {
             if (expressions[emotion] > highestValue) {
               highestValue = expressions[emotion];
               highestEmotion = emotion;
             }
           }
-          
-          // ターゲットの感情と一致したら即座に撮影
           if (highestEmotion === targetEmotion) {
             isCapturing = true;
             emotionSelector.querySelectorAll('button').forEach(b => b.disabled = true);
             infoText.innerText = "表情をキャッチ！";
-            emojiDisplay.innerText = emotionEmojis[targetEmotion] + "📸"; // 検出した感情の絵文字を表示
+            emojiDisplay.innerText = emotionEmojis[targetEmotion] + "📸";
             takePhoto();
           }
-        } else {
-            // 顔が検出されない場合、情報表示を更新
-            if (!isCapturing && targetEmotion) { // 撮影中でなく、感情が選択されていれば
-                infoText.innerText = `顔を検出中... (${emotionPrompts[targetEmotion].split(' ')[0]})`;
-                emojiDisplay.innerText = "🤔";
-            } else if (!isCapturing && !targetEmotion) { // 撮影中でなく、何も選択されていなければ
-                infoText.innerText = "撮影したい感情を選んでください";
-                emojiDisplay.innerText = "👇";
-            }
         }
       }, 200);
     });
-
-    // --- 4. ボタンのイベント設定 ---
     emotionSelector.querySelectorAll('button').forEach(button => {
       button.addEventListener('click', () => {
         targetEmotion = button.dataset.emotion;
         infoText.innerText = emotionPrompts[targetEmotion];
         emojiDisplay.innerText = emotionEmojis[targetEmotion];
-        // photoOutput.style.display = 'none'; // アルバムに移ったので不要
-        
-        // アクティブボタンのスタイルを更新
         emotionSelector.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
       });
     });
-
-    // --- 5. タブ切り替え ---
     tabButtons.forEach(button => {
       button.addEventListener('click', () => {
         const targetTab = button.dataset.tab;
-
         tabButtons.forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
-
         tabContents.forEach(content => {
-          if (content.id === targetTab) {
-            content.classList.add('active');
-            if (targetTab === 'album-mode') {
-              renderAlbum(); // アルバムタブになったら再描画
-              if (video.srcObject) { // カメラを停止
-                video.srcObject.getTracks().forEach(track => track.stop());
-                video.srcObject = null;
-              }
-            } else if (targetTab === 'camera-mode' && !video.srcObject) {
-                // カメラモードに戻った時、カメラが停止していれば再起動
-                startVideo();
-            }
-          } else {
-            content.classList.remove('active');
+          content.classList.toggle('active', content.id === targetTab);
+          if (content.id === 'album-mode' && content.classList.contains('active')) {
+            renderAlbum();
+            if (video.srcObject) { video.srcObject.getTracks().forEach(track => track.stop()); video.srcObject = null; }
+          } else if (content.id === 'camera-mode' && content.classList.contains('active') && !video.srcObject) {
+            startVideo();
           }
         });
       });
     });
-
-    // 初期化処理
-    loadPhotos(); // ページ読み込み時に写真をロード
-    
-    // ページを離れるときにカメラを停止する
-    window.addEventListener('beforeunload', () => {
-      if (video.srcObject) {
-        video.srcObject.getTracks().forEach(track => track.stop());
-      }
-    });
+    loadPhotos();
   </script>
 </body>
 </html>
