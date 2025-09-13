@@ -22,13 +22,24 @@
     video, canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
     .flash { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: white; opacity: 0; z-index: 20; animation: flashAnimation 0.3s ease-out forwards; }
     @keyframes flashAnimation { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
-    #album-mode { display: none; flex-wrap: wrap; justify-content: center; gap: 15px; padding: 20px 0; width: 100%; }
+    
+    /* ★★★ ここを修正 ★★★ */
+    #album-mode {
+      flex-direction: row; /* 縦並びではなく、横に並べて折り返す */
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start; /* 上から詰める */
+      gap: 15px;
+      padding: 20px 0;
+      width: 100%;
+      /* display: none; を削除 */
+    }
     .gallery-item { background-color: #34495e; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); width: 150px; cursor: pointer; position: relative; transition: transform 0.2s; }
     .gallery-item:hover { transform: translateY(-5px); }
     .gallery-item img { width: 100%; height: 100px; object-fit: cover; display: block; }
     .gallery-info { padding: 8px; font-size: 12px; text-align: center; }
     .gallery-info .emotion-label { font-weight: bold; color: #f39c12; }
-    .no-photos-message { color: #95a5a6; font-size: 18px; text-align: center; margin-top: 50px; }
+    .no-photos-message { color: #95a5a6; font-size: 18px; text-align: center; margin-top: 50px; width: 100%; }
     #modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); justify-content: center; align-items: center; }
     #modal-content { display: block; max-width: 90vw; max-height: 90vh; border-radius: 10px; }
     #modal-caption { margin: 10px auto; display: block; width: 80%; text-align: center; color: #ccc; padding: 10px 0; font-size: 16px; }
@@ -86,22 +97,15 @@
     const modalClose = document.getElementById('modal-close');
     const modalDownload = document.getElementById('modal-download');
     const modalDelete = document.getElementById('modal-delete');
-
     let targetEmotion = null, isCapturing = false, photos = [];
     const emotionPrompts = {"happy": "最高の笑顔を見せて！ 😊", "sad": "悲しい顔をして… 😔", "angry": "怒った顔！ 😠", "surprised": "驚いた顔で！ 😮"};
     const emotionEmojis = {"happy": "😊", "sad": "😔", "angry": "😠", "surprised": "😮", "neutral": "😐", "fearful": "😨", "disgusted": "🤢", "No Face": "🤔"};
-
     function loadPhotos() {
-      try {
-        const storedPhotos = localStorage.getItem('emotionPhotos');
-        if (storedPhotos) photos = JSON.parse(storedPhotos);
-      } catch (e) { console.error("Could not load photos from localStorage", e); }
+      try { const storedPhotos = localStorage.getItem('emotionPhotos'); if (storedPhotos) photos = JSON.parse(storedPhotos); } catch (e) { console.error("Could not load photos", e); }
       renderAlbum();
     }
     function savePhotos() {
-      try {
-        localStorage.setItem('emotionPhotos', JSON.stringify(photos));
-      } catch (e) { console.error("Could not save photos to localStorage", e); }
+      try { localStorage.setItem('emotionPhotos', JSON.stringify(photos)); } catch (e) { console.error("Could not save photos", e); }
     }
     function renderAlbum() {
       albumGallery.innerHTML = '';
@@ -110,17 +114,17 @@
         return;
       }
       const fragment = document.createDocumentFragment();
-      photos.forEach((photo, index) => {
+      photos.slice().reverse().forEach((photo, index) => {
+        const originalIndex = photos.length - 1 - index;
         const item = document.createElement('div');
         item.className = 'gallery-item';
-        item.dataset.index = index;
         const img = document.createElement('img');
         img.src = photo.dataUrl;
         const info = document.createElement('div');
         info.className = 'gallery-info';
         info.innerHTML = `<span class="emotion-label">${emotionEmojis[photo.emotion]} ${photo.emotion}</span><div>${new Date(photo.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</div>`;
         item.append(img, info);
-        item.addEventListener('click', () => openModal(photo, index));
+        item.addEventListener('click', () => openModal(photo, originalIndex));
         fragment.appendChild(item);
       });
       albumGallery.appendChild(fragment);
@@ -152,6 +156,7 @@
       emojiDisplay.innerText = "📁❓";
     });
     function startVideo() {
+      if (video.srcObject) return; // 既に起動している場合は何もしない
       navigator.mediaDevices.getUserMedia({ video: {} })
         .then(stream => { video.srcObject = stream; })
         .catch(err => { infoText.innerText = "エラー: カメラ起動失敗"; emojiDisplay.innerText = "🚫"; });
@@ -167,8 +172,10 @@
       const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
       photos.push({ dataUrl, emotion: targetEmotion, timestamp: new Date().toISOString() });
       savePhotos();
-      flashOverlay.className = 'flash';
-      flashOverlay.addEventListener('animationend', () => { flashOverlay.className = ''; }, { once: true });
+      const flash = document.createElement('div');
+      flash.className = 'flash';
+      document.getElementById('video-container').appendChild(flash);
+      flash.addEventListener('animationend', () => { flash.remove(); }, { once: true });
       setTimeout(() => {
         isCapturing = false;
         targetEmotion = null;
@@ -185,8 +192,7 @@
         if (!targetEmotion || isCapturing || !video.srcObject) return;
         const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
         if (detections && detections.length > 0) {
-          let highestEmotion = "neutral";
-          let highestValue = 0;
+          let highestEmotion = "neutral", highestValue = 0;
           const expressions = detections[0].expressions;
           for (const emotion in expressions) {
             if (expressions[emotion] > highestValue) {
@@ -194,7 +200,7 @@
               highestEmotion = emotion;
             }
           }
-          if (highestEmotion === targetEmotion) {
+          if (highestEmotion === targetEmotion && highestValue > 0.8) { // 80%以上の確信度で撮影
             isCapturing = true;
             emotionSelector.querySelectorAll('button').forEach(b => b.disabled = true);
             infoText.innerText = "表情をキャッチ！";
