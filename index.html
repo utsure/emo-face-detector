@@ -156,7 +156,7 @@
       emojiDisplay.innerText = "📁❓";
     });
     function startVideo() {
-      if (video.srcObject) return; // 既に起動している場合は何もしない
+      if (video.srcObject) return;
       navigator.mediaDevices.getUserMedia({ video: {} })
         .then(stream => { video.srcObject = stream; })
         .catch(err => { infoText.innerText = "エラー: カメラ起動失敗"; emojiDisplay.innerText = "🚫"; });
@@ -200,7 +200,7 @@
               highestEmotion = emotion;
             }
           }
-          if (highestEmotion === targetEmotion && highestValue > 0.8) { // 80%以上の確信度で撮影
+          if (highestEmotion === targetEmotion && highestValue > 0.8) {
             isCapturing = true;
             emotionSelector.querySelectorAll('button').forEach(b => b.disabled = true);
             infoText.innerText = "表情をキャッチ！";
