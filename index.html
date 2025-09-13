@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf--8">
+  <meta charset="utf-8">
   <title>感情シャッターカメラ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <style>
@@ -103,24 +103,32 @@
     #emotion-selector {
       display: flex;
       justify-content: center;
-      gap: 10px;
+      gap: 8px; /* ボタン間の隙間を少し狭く */
       margin-bottom: 15px;
       width: 100%;
-      flex-wrap: wrap;
+      flex-wrap: nowrap; /* ★★★ 修正点: ボタンを折り返さないように変更 ★★★ */
+      overflow-x: auto;   /* 画面幅が極端に狭い場合スクロール可に */
+      -ms-overflow-style: none; /* IE and Edge */
+      scrollbar-width: none;    /* Firefox */
+    }
+    /* Webkit系ブラウザでスクロールバーを非表示に */
+    #emotion-selector::-webkit-scrollbar {
+      display: none;
     }
     .emotion-button {
       background-color: var(--emotion-button-bg);
       color: var(--button-text-color);
       border: none;
       border-radius: 25px;
-      padding: 10px 18px;
+      padding: 10px 15px; /* ★★★ 修正点: 横の余白を少し狭く ★★★ */
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      transition: background-color 0.2s;
+      transition: all 0.2s;
+      flex-shrink: 0; /* ボタンが縮まないように */
     }
     .emotion-button.active {
       background-color: var(--emotion-button-active-bg);
@@ -207,7 +215,7 @@
   <div id="app-container">
     <header>
       <div id="tab-selector">
-        <button class="tab-button active" data-tab="camera-mode">撮影</button>
+        <button class="tab-button active" data-tab="camera-mode">カメラ</button>
         <button class="tab-button" data-tab="album-mode">ギャラリー</button>
       </div>
     </header>
