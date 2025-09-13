@@ -50,16 +50,14 @@
     };
     const emotionEmojis = { "happy": "😊", "sad": "😔", "angry": "😠", "surprised": "😮" };
 
-    // --- 1. モデル読み込みとカメラ起動 ---
     Promise.all([
       faceapi.nets.tinyFaceDetector.loadFromUri('./models'),
       faceapi.nets.faceLandmark68Net.loadFromUri('./models'),
       faceapi.nets.faceExpressionNet.loadFromUri('./models')
-    ]).then(startVideo)
-      .catch(err => {
-        infoText.innerText = "エラー: AIモデル読込失敗";
-        emojiDisplay.innerText = "📁❓";
-      });
+    ]).then(startVideo).catch(err => {
+      infoText.innerText = "エラー: AIモデル読込失敗";
+      emojiDisplay.innerText = "📁❓";
+    });
 
     function startVideo() {
       navigator.mediaDevices.getUserMedia({ video: {} })
@@ -70,7 +68,7 @@
         });
     }
 
-    // --- 2. 撮影ロジック ---
+    // --- 撮影とダウンロードを行う関数 ---
     function takePhoto() {
       const captureCanvas = document.createElement('canvas');
       captureCanvas.width = video.videoWidth;
@@ -79,11 +77,27 @@
       
       ctx.translate(captureCanvas.width, 0);
       ctx.scale(-1, 1);
-      
       ctx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
       
-      photoOutput.src = captureCanvas.toDataURL('image/jpeg');
+      const dataUrl = captureCanvas.toDataURL('image/jpeg');
+      
+      // 画面に撮影した写真を表示
+      photoOutput.src = dataUrl;
       photoOutput.style.display = 'block';
+
+      // --- ★★★ ここから自動ダウンロード処理 ★★★ ---
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      
+      // ファイル名を生成 (例: photo_happy_2025-09-13T06:30:00.123Z.jpg)
+      const timestamp = new Date().toISOString();
+      link.download = `photo_${targetEmotion}_${timestamp}.jpg`;
+      
+      // リンクを一時的に追加してクリックさせ、すぐに削除する
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      // --- ★★★ 自動ダウンロード処理はここまで ★★★ ---
 
       // 4秒後にリセット
       setTimeout(() => {
@@ -95,7 +109,6 @@
       }, 4000);
     }
 
-    // --- 3. 認識ループ ---
     video.addEventListener('play', () => {
       const canvas = faceapi.createCanvasFromMedia(video);
       document.getElementById('video-container').append(canvas);
@@ -104,12 +117,10 @@
 
       setInterval(async () => {
         const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
-        
         canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
         
         if (detections && detections.length > 0) {
           const resizedDetections = faceapi.resizeResults(detections, displaySize);
-          
           let highestEmotion = "neutral";
           let highestValue = 0;
           const expressions = resizedDetections[0].expressions;
@@ -120,22 +131,17 @@
             }
           }
           
-          // ★★★ ここを修正 ★★★
-          // ターゲットの感情と一致したら、カウントダウンなしで即座に撮影
           if (targetEmotion && highestEmotion === targetEmotion && !isCapturing) {
             isCapturing = true;
             emotionSelector.querySelectorAll('button').forEach(b => b.disabled = true);
-            
             infoText.innerText = "表情をキャッチ！";
             emojiDisplay.innerText = "📸";
-            
-            takePhoto(); // 直接撮影関数を呼び出す
+            takePhoto();
           }
         }
       }, 200);
     });
 
-    // --- 4. ボタンのイベント設定 ---
     emotionSelector.querySelectorAll('button').forEach(button => {
       button.addEventListener('click', () => {
         targetEmotion = button.dataset.emotion;
