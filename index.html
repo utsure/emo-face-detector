@@ -17,16 +17,22 @@
     #tab-selector { display: flex; width: 100%; background-color: var(--tab-container-bg); border-radius: 25px; padding: 4px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1); }
     .tab-button { flex-grow: 1; padding: 10px 0; background: transparent; color: var(--text-muted-color); border: none; font-size: 16px; cursor: pointer; border-radius: 22px; font-weight: 500; transition: all 0.2s ease-in-out; }
     .tab-button.active { background-color: var(--content-bg); color: var(--text-color); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    main { flex-grow: 1; position: relative; display: flex; flex-direction: column; }
+    main { flex-grow: 1; position: relative; overflow-y: auto; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     
-    /* UIの状態を切り替えるためのクラス */
-    .shared-ui-elements { padding: 10px 20px; flex-shrink: 0; }
-    .gallery-view .camera-specific-text { display: none; } /* ギャラリー表示時はカメラ用テキストを隠す */
-
-    #camera-mode { display: flex; flex-direction: column; text-align: center; flex-grow: 1; min-height: 0; }
-    #camera-mode.active { height: 100%; }
+    /* --- カメラモード --- */
+    #camera-mode {
+      /* ★★★ 根本的な修正点: height: 100% を削除 ★★★ */
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+    }
+    /* ★★★ 根本的な修正点: アクティブな時だけ高さを100%にするルールを追加 ★★★ */
+    #camera-mode.active {
+      height: 100%;
+    }
+    .camera-ui-top { padding: 10px 20px; flex-shrink: 0; }
     .instruction-text { font-size: 16px; color: var(--text-muted-color); margin-bottom: 12px; }
     
     .emotion-buttons-panel { display: flex; justify-content: center; gap: 10px; margin-bottom: 12px; width: 100%; flex-wrap: wrap; }
@@ -40,10 +46,8 @@
     video, canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); border-radius: 15px; }
     canvas { z-index: 10; pointer-events: none; }
     
-    #album-mode { padding: 0 20px 20px; box-sizing: border-box; background: var(--content-bg); overflow-y: auto; }
-    .tab-panels { flex-grow: 1; min-height: 0; position: relative; } /* スクロール領域 */
-    .tab-panels .tab-content { height: 100%; }
-
+    /* --- アルバムモード --- */
+    #album-mode { padding: 20px; box-sizing: border-box; background: var(--content-bg); }
     #album-gallery { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 15px; width: 100%; }
     .gallery-item { background-color: #f1f1f1; border-radius: 10px; overflow: hidden; width: calc(50% - 7.5px); cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     .gallery-item img { width: 100%; height: 120px; object-fit: cover; display: block; }
@@ -51,6 +55,7 @@
     .gallery-info .emotion-label { font-weight: bold; color: var(--accent-color); }
     .no-photos-message { color: var(--text-muted-color); font-size: 18px; text-align: center; width: 100%; padding-top: 40px; }
     
+    /* --- モーダル --- */
     #modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); justify-content: center; align-items: center; }
     #modal-content { display: block; max-width: 90vw; max-height: 80vh; border-radius: 10px; }
     #modal-caption { margin: 10px auto; display: block; width: 80%; text-align: center; color: #ccc; padding: 10px 0; font-size: 16px; }
@@ -70,53 +75,59 @@
       </div>
     </header>
     <main>
-        <div class="shared-ui-elements">
-            <div class="camera-specific-text">
-                <p class="instruction-text">感情を選んで撮影しよう</p>
-                <div id="target-info"></div>
+      <div id="camera-mode" class="tab-content active">
+        <div class="camera-ui-top">
+            <p class="instruction-text">感情を選んで撮影しよう</p>
+            <div id="emotion-selector" class="emotion-buttons-panel">
+              <button class="emotion-button" data-emotion="happy">😀 Happy</button>
+              <button class="emotion-button" data-emotion="sad">😢 Sad</button>
+              <button class="emotion-button" data-emotion="surprised">😲 Surprised</button>
+              <button class="emotion-button" data-emotion="angry">😠 Angry</button>
+              <button class="emotion-button" data-emotion="disgusted">🤢 Disgusted</button>
+              <button class="emotion-button" data-emotion="neutral">😐 Neutral</button>
             </div>
-            <div id="emotion-controls" class="emotion-buttons-panel">
-                </div>
+            <div id="target-info"></div>
         </div>
-
-        <div class="tab-panels">
-            <div id="camera-mode" class="tab-content active">
-                <div class="bottom-sheet">
-                    <div id="video-container">
-                        <video id="input_video" autoplay muted playsinline></video>
-                        <canvas id="output_canvas"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div id="album-mode" class="tab-content">
-                <div id="album-gallery"></div>
+        <div class="bottom-sheet">
+            <div id="video-container">
+                <video id="input_video" autoplay muted playsinline></video>
+                <canvas id="output_canvas"></canvas>
             </div>
         </div>
-        </main>
+      </div>
+      <div id="album-mode" class="tab-content">
+        <div id="emotion-filter" class="emotion-buttons-panel">
+            <button class="emotion-button all-btn active" data-emotion="all">📂 すべて</button>
+            <button class="emotion-button" data-emotion="happy">😀</button>
+            <button class="emotion-button" data-emotion="sad">😢</button>
+            <button class="emotion-button" data-emotion="surprised">😲</button>
+            <button class="emotion-button" data-emotion="angry">😠</button>
+            <button class="emotion-button" data-emotion="disgusted">🤢</button>
+            <button class="emotion-button" data-emotion="neutral">😐</button>
+        </div>
+        <div id="album-gallery"></div>
+      </div>
+    </main>
   </div>
   <div id="modal">
     <span id="modal-close">&times;</span> <span id="modal-delete">🗑️</span> <a id="modal-download">⬇️</a>
     <img id="modal-content"> <div id="modal-caption"></div>
   </div>
-
   <script>
-    // --- 要素の取得 ---
-    const mainElement = document.querySelector('main');
     const video = document.getElementById('input_video');
     const targetInfo = document.getElementById('target-info');
-    const emotionControls = document.getElementById('emotion-controls'); // 統合されたボタンパネル
+    const emotionSelector = document.getElementById('emotion-selector');
+    const emotionFilter = document.getElementById('emotion-filter');
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
     const albumGallery = document.getElementById('album-gallery');
     const modal = document.getElementById('modal'), modalImg = document.getElementById('modal-content'), modalCaption = document.getElementById('modal-caption');
     const modalClose = document.getElementById('modal-close'), modalDownload = document.getElementById('modal-download'), modalDelete = document.getElementById('modal-delete');
     
-    // --- グローバル変数 ---
     let targetEmotion = null;
     let isCapturing = false;
     let currentPhotoIndex = null;
     let currentFilter = 'all';
-    const emotions = ['happy', 'sad', 'surprised', 'angry', 'disgusted', 'neutral'];
     const emotionPrompts = {
         "happy": "最高の笑顔で！ 😄", "sad": "悲しい顔をして… 😔", "angry": "怒った顔！ 😠", 
         "surprised": "驚いた顔で！ 😮", "disgusted": "嫌悪の表情で… 🤢", "neutral": "無表情で。 😐"
@@ -124,7 +135,6 @@
     const emotionEmojis = {"neutral": "😐", "happy": "😊", "sad": "😔", "angry": "😠", "surprised": "😮", "fearful": "😨", "disgusted": "🤢"};
     const PHOTO_STORAGE_KEY = 'emotionPhotos';
 
-    // --- 写真データ管理 ---
     function getPhotosFromStorage() {
         try { const data = localStorage.getItem(PHOTO_STORAGE_KEY); return data ? JSON.parse(data) : []; }
         catch (e) { console.error("ストレージからの写真読み込みに失敗:", e); return []; }
@@ -134,61 +144,12 @@
         catch (e) { console.error("写真の保存に失敗:", e); }
     }
     
-    // --- ★★★ ボタンの動的生成とイベント設定 ★★★ ---
-    function renderEmotionButtons(mode) {
-        emotionControls.innerHTML = '';
-        let buttonsHtml = '';
-
-        if (mode === 'gallery') {
-            buttonsHtml += `<button class="emotion-button all-btn active" data-emotion="all">📂 すべて</button>`;
-            emotions.forEach(emotion => {
-                buttonsHtml += `<button class="emotion-button" data-emotion="${emotion}">${emotionEmojis[emotion]}</button>`;
-            });
-        } else { // camera
-            emotions.forEach(emotion => {
-                buttonsHtml += `<button class="emotion-button" data-emotion="${emotion}">${emotionEmojis[emotion]} ${emotion.charAt(0).toUpperCase() + emotion.slice(1)}</button>`;
-            });
-        }
-        emotionControls.innerHTML = buttonsHtml;
-        attachEmotionListeners(mode);
-    }
-
-    function attachEmotionListeners(mode) {
-        emotionControls.querySelectorAll('.emotion-button').forEach(button => {
-            if (mode === 'camera') {
-                button.addEventListener('click', handleCameraEmotionSelect);
-            } else { // gallery
-                button.addEventListener('click', handleGalleryFilter);
-            }
-        });
-    }
-
-    // カメラ用の感情選択ハンドラ
-    function handleCameraEmotionSelect(event) {
-        const button = event.currentTarget;
-        if (isCapturing) return;
-        if (targetEmotion === button.dataset.emotion) {
-            targetEmotion = null; button.classList.remove('active'); targetInfo.innerText = "";
-        } else {
-            targetEmotion = button.dataset.emotion; targetInfo.innerText = emotionPrompts[targetEmotion];
-            emotionControls.querySelectorAll('.emotion-button').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-        }
-    }
-
-    // ギャラリー用のフィルターハンドラ
-    function handleGalleryFilter(event) {
-        const button = event.currentTarget;
-        currentFilter = button.dataset.emotion;
-        emotionControls.querySelectorAll('.emotion-button').forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-        renderAlbum(currentFilter);
-    }
-
-    // --- ギャラリー描画 ---
     function renderAlbum(filterEmotion = 'all') {
         const allPhotos = getPhotosFromStorage();
-        const photosToRender = (filterEmotion === 'all') ? allPhotos : allPhotos.filter(p => p.emotion === filterEmotion);
+        const photosToRender = (filterEmotion === 'all')
+            ? allPhotos
+            : allPhotos.filter(p => p.emotion === filterEmotion);
+
         albumGallery.innerHTML = '';
         if (photosToRender.length === 0) {
             albumGallery.innerHTML = filterEmotion === 'all'
@@ -196,6 +157,7 @@
                 : `<p class="no-photos-message">「${emotionEmojis[filterEmotion] || ''}」の写真はありません。</p>`;
             return;
         }
+        
         const fragment = document.createDocumentFragment();
         photosToRender.slice().reverse().forEach(photo => {
             const originalIndex = allPhotos.findIndex(p => p.timestamp === photo.timestamp);
@@ -213,8 +175,7 @@
         albumGallery.appendChild(fragment);
     }
     
-    // --- カメラとAIモデル ---
-    Promise.all([ faceapi.nets.tinyFaceDetector.loadFromUri('./models'), faceapi.nets.faceLandmark68Net.loadFromUri('./models'), faceapi.nets.faceExpressionNet.loadFromUri('./models') ]).catch(err => { targetInfo.innerText = "エラー: AIモデル読込失敗"; });
+    Promise.all([ faceapi.nets.tinyFaceDetector.loadFromUri('./models'), faceapi.nets.faceLandmark68Net.loadFromUri('./models'), faceapi.nets.faceExpressionNet.loadFromUri('./models') ]).then(setupCamera).catch(err => { targetInfo.innerText = "エラー: AIモデル読込失敗"; });
     function setupCamera() {
         if (video.srcObject) return;
         targetInfo.innerText = "カメラにアクセス中...📷";
@@ -239,7 +200,7 @@
         targetInfo.innerText = "撮影しました！✅";
         setTimeout(() => {
             isCapturing = false; targetEmotion = null; targetInfo.innerText = "";
-            emotionControls.querySelectorAll('.emotion-button').forEach(b => { b.disabled = false; b.classList.remove('active'); });
+            emotionSelector.querySelectorAll('button').forEach(b => { b.disabled = false; b.classList.remove('active'); });
         }, 2000);
     }
     video.addEventListener('play', () => {
@@ -252,15 +213,35 @@
           const expressions = detections[0].expressions;
           const [highestEmotion, highestValue] = Object.entries(expressions).reduce((acc, [key, value]) => value > acc[1] ? [key, value] : acc, ["", 0]);
           if (targetEmotion && highestEmotion === targetEmotion && highestValue > 0.8) {
-            emotionControls.querySelectorAll('.emotion-button').forEach(b => b.disabled = true);
+            emotionSelector.querySelectorAll('button').forEach(b => b.disabled = true);
             targetInfo.innerText = `「${targetEmotion}」をキャッチ！`;
             takePhoto(targetEmotion);
           }
         }
       }, 300);
     });
+    emotionSelector.addEventListener('click', (event) => {
+        const button = event.target.closest('.emotion-button');
+        if (!button || isCapturing) return;
 
-    // --- ★★★ タブ切り替え処理の修正 ★★★ ---
+        if (targetEmotion === button.dataset.emotion) {
+            targetEmotion = null; button.classList.remove('active'); targetInfo.innerText = "";
+        } else {
+            targetEmotion = button.dataset.emotion; targetInfo.innerText = emotionPrompts[targetEmotion];
+            emotionSelector.querySelectorAll('.emotion-button').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+        }
+    });
+
+    emotionFilter.addEventListener('click', (event) => {
+        const button = event.target.closest('.emotion-button');
+        if (!button) return;
+        currentFilter = button.dataset.emotion;
+        emotionFilter.querySelectorAll('.emotion-button').forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        renderAlbum(currentFilter);
+    });
+
     tabButtons.forEach(button => {
       button.addEventListener('click', () => {
         const targetTab = button.dataset.tab;
@@ -268,21 +249,19 @@
         tabContents.forEach(content => content.classList.remove('active'));
         button.classList.add('active');
         document.getElementById(targetTab).classList.add('active');
-        
         if (targetTab === 'album-mode') {
-          mainElement.classList.add('gallery-view');
           stopVideo();
-          renderEmotionButtons('gallery');
-          renderAlbum('all');
+          currentFilter = 'all'; 
+          emotionFilter.querySelectorAll('.emotion-button').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.emotion === 'all');
+          });
+          renderAlbum(currentFilter);
         } else {
-          mainElement.classList.remove('gallery-view');
           setupCamera();
-          renderEmotionButtons('camera');
         }
       });
     });
 
-    // --- モーダル関連 ---
     function openModal(photo, index) {
         modal.style.display = 'flex'; modalImg.src = photo.dataUrl;
         modalCaption.innerHTML = `<span class="emotion-label">${emotionEmojis[photo.emotion] || ''} ${photo.emotion}</span><br>${new Date(photo.timestamp).toLocaleString()}`;
@@ -299,10 +278,7 @@
             modal.style.display = 'none';
         }
     };
-    
-    // --- 初期化処理 ---
-    renderEmotionButtons('camera'); // 最初にカメラ用のボタンを描画
-    setupCamera();
+    if (document.querySelector('.tab-button.active').dataset.tab === 'camera-mode') { setupCamera(); }
   </script>
 </body>
 </html>
