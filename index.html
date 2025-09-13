@@ -23,18 +23,17 @@
     
     /* --- カメラモード --- */
     #camera-mode {
-      /* ★★★ 根本的な修正点: height: 100% を削除 ★★★ */
       display: flex;
       flex-direction: column;
       text-align: center;
     }
-    /* ★★★ 根本的な修正点: アクティブな時だけ高さを100%にするルールを追加 ★★★ */
     #camera-mode.active {
       height: 100%;
     }
     .camera-ui-top { padding: 10px 20px; flex-shrink: 0; }
     .instruction-text { font-size: 16px; color: var(--text-muted-color); margin-bottom: 12px; }
     
+    /* 感情ボタンパネルの共通スタイル */
     .emotion-buttons-panel { display: flex; justify-content: center; gap: 10px; margin-bottom: 12px; width: 100%; flex-wrap: wrap; }
     .emotion-button { background-color: var(--emotion-button-bg); color: var(--button-text-color); border: none; border-radius: 25px; padding: 8px 10px; font-size: 14px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 5px; transition: all 0.2s; flex-shrink: 0; width: calc(33.33% - 10px); box-sizing: border-box; }
     .emotion-button.active { background-color: var(--emotion-button-active-bg); box-shadow: 0 4px 12px rgba(0,0,0,0.2); transform: translateY(-2px); }
@@ -116,8 +115,8 @@
   <script>
     const video = document.getElementById('input_video');
     const targetInfo = document.getElementById('target-info');
-    const emotionSelector = document.getElementById('emotion-selector');
-    const emotionFilter = document.getElementById('emotion-filter');
+    const emotionSelector = document.getElementById('emotion-selector'); // カメラ用感情選択
+    const emotionFilter = document.getElementById('emotion-filter');     // ギャラリー用感情フィルター
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
     const albumGallery = document.getElementById('album-gallery');
@@ -220,6 +219,8 @@
         }
       }, 300);
     });
+
+    // カメラ用の感情選択ボタンのイベントリスナー
     emotionSelector.addEventListener('click', (event) => {
         const button = event.target.closest('.emotion-button');
         if (!button || isCapturing) return;
@@ -233,6 +234,7 @@
         }
     });
 
+    // ギャラリー用の感情フィルターボタンのイベントリスナー
     emotionFilter.addEventListener('click', (event) => {
         const button = event.target.closest('.emotion-button');
         if (!button) return;
@@ -249,7 +251,14 @@
         tabContents.forEach(content => content.classList.remove('active'));
         button.classList.add('active');
         document.getElementById(targetTab).classList.add('active');
+
+        // ★★★ 修正点: 各タブ表示時のUI要素の表示・非表示を制御 ★★★
+        const cameraTopUI = document.querySelector('#camera-mode .camera-ui-top');
         if (targetTab === 'album-mode') {
+          // ギャラリータブが選択された時
+          cameraTopUI.style.display = 'none'; // カメラ用のUIを非表示
+          emotionFilter.style.display = 'flex'; // ギャラリーフィルターを表示
+
           stopVideo();
           currentFilter = 'all'; 
           emotionFilter.querySelectorAll('.emotion-button').forEach(btn => {
@@ -257,6 +266,9 @@
           });
           renderAlbum(currentFilter);
         } else {
+          // カメラタブが選択された時
+          cameraTopUI.style.display = 'block'; // カメラ用のUIを表示
+          emotionFilter.style.display = 'none'; // ギャラリーフィルターを非表示
           setupCamera();
         }
       });
@@ -278,7 +290,19 @@
             modal.style.display = 'none';
         }
     };
-    if (document.querySelector('.tab-button.active').dataset.tab === 'camera-mode') { setupCamera(); }
+
+    // 初期化時にも、現在のタブに基づいてUIを正しく設定
+    const initialTab = document.querySelector('.tab-button.active').dataset.tab;
+    const cameraTopUI = document.querySelector('#camera-mode .camera-ui-top');
+    if (initialTab === 'camera-mode') {
+        cameraTopUI.style.display = 'block';
+        emotionFilter.style.display = 'none';
+        setupCamera();
+    } else {
+        cameraTopUI.style.display = 'none';
+        emotionFilter.style.display = 'flex';
+        renderAlbum();
+    }
   </script>
 </body>
 </html>
