@@ -77,7 +77,6 @@
       captureCanvas.height = video.videoHeight;
       const ctx = captureCanvas.getContext('2d');
       
-      // 鏡像表示に合わせてキャンバスも左右反転
       ctx.translate(captureCanvas.width, 0);
       ctx.scale(-1, 1);
       
@@ -86,29 +85,14 @@
       photoOutput.src = captureCanvas.toDataURL('image/jpeg');
       photoOutput.style.display = 'block';
 
+      // 4秒後にリセット
       setTimeout(() => {
         isCapturing = false;
         targetEmotion = null;
         infoText.innerText = "撮影したい感情を選んでください";
         emojiDisplay.innerText = "👇";
         emotionSelector.querySelectorAll('button').forEach(b => b.disabled = false);
-      }, 4000); // 4秒後にリセット
-    }
-
-    function startCountdown() {
-      let count = 3;
-      infoText.innerText = "表情を検出！撮影します...";
-      emojiDisplay.innerText = count;
-      const timer = setInterval(() => {
-        count--;
-        if (count > 0) {
-          emojiDisplay.innerText = count;
-        } else {
-          clearInterval(timer);
-          emojiDisplay.innerText = "📸";
-          takePhoto();
-        }
-      }, 1000);
+      }, 4000);
     }
 
     // --- 3. 認識ループ ---
@@ -136,11 +120,16 @@
             }
           }
           
-          // ターゲットの感情と一致したら撮影プロセスを開始
+          // ★★★ ここを修正 ★★★
+          // ターゲットの感情と一致したら、カウントダウンなしで即座に撮影
           if (targetEmotion && highestEmotion === targetEmotion && !isCapturing) {
             isCapturing = true;
             emotionSelector.querySelectorAll('button').forEach(b => b.disabled = true);
-            startCountdown();
+            
+            infoText.innerText = "表情をキャッチ！";
+            emojiDisplay.innerText = "📸";
+            
+            takePhoto(); // 直接撮影関数を呼び出す
           }
         }
       }, 200);
@@ -152,7 +141,7 @@
         targetEmotion = button.dataset.emotion;
         infoText.innerText = emotionPrompts[targetEmotion];
         emojiDisplay.innerText = emotionEmojis[targetEmotion];
-        photoOutput.style.display = 'none'; // 前の写真を隠す
+        photoOutput.style.display = 'none';
       });
     });
   </script>
