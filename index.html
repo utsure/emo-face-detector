@@ -2,88 +2,121 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <title>AI感情認識カメラ (face-api.js)</title>
+  <title>感情シャッターカメラ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <style>
-    body { font-family: 'Arial', sans-serif; margin: 0; background: #2c3e50; color: #ecf0f1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; overflow: hidden; padding-bottom: 20px; }
-    #info-text { font-size: 32px; font-weight: bold; padding: 20px 10px 10px; text-align: center; width: 100%; box-sizing: border-box; color: #f39c12; }
-    #emoji-display { font-size: 90px; text-align: center; width: 100%; padding: 0 10px 20px; line-height: 1; }
-    #video-container { position: relative; width: 95vw; max-width: 600px; margin: 0 auto; border-radius: 15px; overflow: hidden; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4); background-color: #34495e; }
+    body { font-family: 'Arial', sans-serif; margin: 0; background: #2c3e50; color: #ecf0f1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; overflow: hidden; padding: 10px; box-sizing: border-box; }
+    #info-text { font-size: 24px; font-weight: bold; padding: 10px; text-align: center; width: 100%; color: #f39c12; height: 30px; }
+    #emoji-display { font-size: 60px; text-align: center; width: 100%; height: 70px; line-height: 1; }
+    #emotion-selector { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 15px; }
+    .emotion-button { background-color: #3498db; color: white; border: none; border-radius: 8px; padding: 10px 15px; font-size: 16px; cursor: pointer; transition: background-color 0.3s; }
+    .emotion-button:hover, .emotion-button.active { background-color: #2980b9; }
+    .emotion-button:disabled { background-color: #555; cursor: not-allowed; }
+    #video-container { position: relative; width: 95vw; max-width: 500px; border-radius: 15px; overflow: hidden; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4); }
     #video-container::before { content: ''; display: block; padding-top: calc(3 / 4 * 100%); }
-    
-    /* ★★★ ここを修正 ★★★ */
-    video, canvas { 
-        position: absolute; 
-        top: 0; 
-        left: 0; 
-        width: 100%; 
-        height: 100%; 
-        object-fit: cover; 
-        transform: scaleX(-1); /* ビデオとキャンバスの両方を左右反転させる */
-    }
-    
-    canvas { 
-        z-index: 10; 
-    }
+    video, canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+    #photo-output { margin-top: 15px; border: 4px solid white; border-radius: 15px; max-width: 95vw; max-height: 200px; display: none; }
   </style>
-  
   <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
-
 </head>
 
 <body>
-  <div id="info-text">AIモデルを準備中...</div>
-  <div id="emoji-display">⏳</div>
+  <div id="info-text">撮影したい感情を選んでください</div>
+  <div id="emoji-display">👇</div>
+  <div id="emotion-selector">
+    <button class="emotion-button" data-emotion="happy">😊 Happy</button>
+    <button class="emotion-button" data-emotion="sad">😔 Sad</button>
+    <button class="emotion-button" data-emotion="angry">😠 Angry</button>
+    <button class="emotion-button" data-emotion="surprised">😮 Surprised</button>
+  </div>
   <div id="video-container">
     <video id="input_video" autoplay muted playsinline></video>
     <canvas id="output_canvas"></canvas>
   </div>
-  
+  <img id="photo-output" alt="撮影された写真">
+
   <script>
     const video = document.getElementById('input_video');
     const infoText = document.getElementById('info-text');
     const emojiDisplay = document.getElementById('emoji-display');
+    const photoOutput = document.getElementById('photo-output');
+    const emotionSelector = document.getElementById('emotion-selector');
 
-    const emotionEmojis = {
-      "neutral": "😐", "happy": "😊", "sad": "😔", "angry": "😠", "surprised": "😮", "fearful": "😨", "disgusted": "🤢", "No Face": "🤔"
+    let targetEmotion = null;
+    let isCapturing = false;
+
+    const emotionPrompts = {
+      "happy": "最高の笑顔を見せて！ 😊", "sad": "悲しい顔をして… 😔", "angry": "怒った顔！ 😠", "surprised": "驚いた顔で！ 😮"
     };
+    const emotionEmojis = { "happy": "😊", "sad": "😔", "angry": "😠", "surprised": "😮" };
 
-    // --- 1. モデルを読み込む ---
+    // --- 1. モデル読み込みとカメラ起動 ---
     Promise.all([
       faceapi.nets.tinyFaceDetector.loadFromUri('./models'),
       faceapi.nets.faceLandmark68Net.loadFromUri('./models'),
       faceapi.nets.faceExpressionNet.loadFromUri('./models')
     ]).then(startVideo)
       .catch(err => {
-        console.error("AIモデルの読み込みに失敗しました: ", err);
-        infoText.innerText = "エラー: AIモデル読込失敗。modelsフォルダを確認してください。";
+        infoText.innerText = "エラー: AIモデル読込失敗";
         emojiDisplay.innerText = "📁❓";
       });
 
-    // --- 2. カメラを起動する ---
     function startVideo() {
-      infoText.innerText = "カメラにアクセス中...";
-      emojiDisplay.innerText = "📷";
       navigator.mediaDevices.getUserMedia({ video: {} })
-        .then(stream => {
-          video.srcObject = stream;
-        })
+        .then(stream => { video.srcObject = stream; })
         .catch(err => {
-          console.error("カメラの起動に失敗しました: ", err);
-          infoText.innerText = "エラー: カメラ起動失敗。サイトの許可を確認してください。";
+          infoText.innerText = "エラー: カメラ起動失敗";
           emojiDisplay.innerText = "🚫";
         });
     }
 
-    // --- 3. 認識ループを開始する ---
+    // --- 2. 撮影ロジック ---
+    function takePhoto() {
+      const captureCanvas = document.createElement('canvas');
+      captureCanvas.width = video.videoWidth;
+      captureCanvas.height = video.videoHeight;
+      const ctx = captureCanvas.getContext('2d');
+      
+      // 鏡像表示に合わせてキャンバスも左右反転
+      ctx.translate(captureCanvas.width, 0);
+      ctx.scale(-1, 1);
+      
+      ctx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
+      
+      photoOutput.src = captureCanvas.toDataURL('image/jpeg');
+      photoOutput.style.display = 'block';
+
+      setTimeout(() => {
+        isCapturing = false;
+        targetEmotion = null;
+        infoText.innerText = "撮影したい感情を選んでください";
+        emojiDisplay.innerText = "👇";
+        emotionSelector.querySelectorAll('button').forEach(b => b.disabled = false);
+      }, 4000); // 4秒後にリセット
+    }
+
+    function startCountdown() {
+      let count = 3;
+      infoText.innerText = "表情を検出！撮影します...";
+      emojiDisplay.innerText = count;
+      const timer = setInterval(() => {
+        count--;
+        if (count > 0) {
+          emojiDisplay.innerText = count;
+        } else {
+          clearInterval(timer);
+          emojiDisplay.innerText = "📸";
+          takePhoto();
+        }
+      }, 1000);
+    }
+
+    // --- 3. 認識ループ ---
     video.addEventListener('play', () => {
       const canvas = faceapi.createCanvasFromMedia(video);
       document.getElementById('video-container').append(canvas);
       const displaySize = { width: video.clientWidth, height: video.clientHeight };
       faceapi.matchDimensions(canvas, displaySize);
-
-      infoText.innerText = "顔を検出中...";
-      emojiDisplay.innerText = "🤔";
 
       setInterval(async () => {
         const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
@@ -92,12 +125,10 @@
         
         if (detections && detections.length > 0) {
           const resizedDetections = faceapi.resizeResults(detections, displaySize);
-          faceapi.draw.drawDetections(canvas, resizedDetections);
           
           let highestEmotion = "neutral";
           let highestValue = 0;
           const expressions = resizedDetections[0].expressions;
-
           for (const emotion in expressions) {
             if (expressions[emotion] > highestValue) {
               highestValue = expressions[emotion];
@@ -105,14 +136,24 @@
             }
           }
           
-          infoText.innerText = `Emotion: ${highestEmotion}`;
-          emojiDisplay.innerText = emotionEmojis[highestEmotion];
-
-        } else {
-          infoText.innerText = "顔を検出中...";
-          emojiDisplay.innerText = "🤔";
+          // ターゲットの感情と一致したら撮影プロセスを開始
+          if (targetEmotion && highestEmotion === targetEmotion && !isCapturing) {
+            isCapturing = true;
+            emotionSelector.querySelectorAll('button').forEach(b => b.disabled = true);
+            startCountdown();
+          }
         }
       }, 200);
+    });
+
+    // --- 4. ボタンのイベント設定 ---
+    emotionSelector.querySelectorAll('button').forEach(button => {
+      button.addEventListener('click', () => {
+        targetEmotion = button.dataset.emotion;
+        infoText.innerText = emotionPrompts[targetEmotion];
+        emojiDisplay.innerText = emotionEmojis[targetEmotion];
+        photoOutput.style.display = 'none'; // 前の写真を隠す
+      });
     });
   </script>
 </body>
