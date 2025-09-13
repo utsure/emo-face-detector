@@ -87,7 +87,6 @@
     .tab-content.active { display: flex; flex-direction: column; }
     
     /* --- カメラモード --- */
-    /* ★★★ 修正点: カメラモード全体をFlexboxコンテナとして設定 ★★★ */
     #camera-mode {
       height: 100%;
       display: flex;
@@ -95,19 +94,19 @@
       text-align: center;
     }
     .camera-ui-top {
-      padding: 10px 20px; /* 上下の余白を詰める */
+      padding: 10px 20px;
       flex-shrink: 0;
     }
     .instruction-text {
       font-size: 16px;
       color: var(--text-muted-color);
-      margin-bottom: 12px; /* 余白を詰める */
+      margin-bottom: 12px;
     }
     #emotion-selector {
       display: flex;
       justify-content: center;
       gap: 10px;
-      margin-bottom: 12px; /* 余白を詰める */
+      margin-bottom: 12px;
       width: 100%;
       flex-wrap: wrap; 
     }
@@ -116,17 +115,17 @@
       color: var(--button-text-color);
       border: none;
       border-radius: 25px;
-      padding: 8px 10px; /* ★★★ 修正点: ボタンの余白を調整 ★★★ */
+      padding: 8px 10px;
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      justify-content: center; /* テキストと絵文字を中央寄せ */
+      justify-content: center;
       gap: 5px;
       transition: all 0.2s;
       flex-shrink: 0; 
-      width: calc(33.33% - 10px); /* ★★★ 修正点: 横3列になるように幅を指定 ★★★ */
+      width: calc(33.33% - 10px);
       box-sizing: border-box;
     }
     .emotion-button.active {
@@ -138,14 +137,13 @@
       font-size: 18px;
       font-weight: bold;
       color: var(--text-color);
-      height: 22px; /* 高さを詰める */
+      height: 22px;
     }
     #realtime-display { display: none; }
 
-    /* ★★★ 修正点: 下部シートのレイアウト方式を変更 ★★★ */
     .bottom-sheet {
-      flex-grow: 1; /* 残りの高さをすべて埋める */
-      min-height: 0; /* Flexboxの子要素が縮小できるように */
+      flex-grow: 1; 
+      min-height: 0;
       background: var(--content-bg);
       border-top-left-radius: 24px;
       border-top-right-radius: 24px;
@@ -153,36 +151,38 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 15px;
+      padding: 0; /* ★★★ 修正点: パディングを0にする ★★★ */
       box-sizing: border-box;
     }
     .sheet-handle {
-      width: 40px;
-      height: 5px;
-      background-color: #d8d8d8;
-      border-radius: 2.5px;
-      margin-bottom: 15px;
-      flex-shrink: 0;
+      display: none; /* ★★★ 修正点: シートハンドルを非表示にする ★★★ */
     }
     #video-container {
       position: relative;
       width: 100%;
-      border-radius: 15px;
+      height: 100%; /* 親要素の残りの高さを埋める */
+      border-radius: 0; /* ★★★ 修正点: 枠線をなくす ★★★ */
       overflow: hidden;
       flex-grow: 1;
       display: flex;
       justify-content: center;
       align-items: center;
-      background: #e9ecef;
+      background: none; /* ★★★ 修正点: 背景をなくす ★★★ */
     }
     video, canvas {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       object-fit: cover; transform: scaleX(-1);
+      border-radius: 15px; /* 動画自体には角丸を残す */
     }
     canvas { z-index: 10; pointer-events: none; }
 
     /* --- アルバムモード --- */
-    #album-mode { padding: 20px; box-sizing: border-box; background: var(--content-bg); }
+    #album-mode { 
+      padding: 20px; 
+      box-sizing: border-box; 
+      background: var(--content-bg); 
+      overflow-y: auto;
+    }
     #album-gallery { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 15px; width: 100%; }
     .gallery-item {
       background-color: #f1f1f1; border-radius: 10px; overflow: hidden;
