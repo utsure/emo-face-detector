@@ -47,7 +47,7 @@
     /* --- ヘッダー: タブ --- */
     header {
       flex-shrink: 0;
-      padding: 15px 15px 10px; /* 上の余白を少し詰める */
+      padding: 15px 15px 10px;
     }
     #tab-selector {
       display: flex;
@@ -151,28 +151,28 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 0; /* ★★★ 修正点: パディングを0にする ★★★ */
+      padding: 0;
       box-sizing: border-box;
     }
     .sheet-handle {
-      display: none; /* ★★★ 修正点: シートハンドルを非表示にする ★★★ */
+      display: none;
     }
     #video-container {
       position: relative;
       width: 100%;
-      height: 100%; /* 親要素の残りの高さを埋める */
-      border-radius: 0; /* ★★★ 修正点: 枠線をなくす ★★★ */
+      height: 100%;
+      border-radius: 0;
       overflow: hidden;
       flex-grow: 1;
       display: flex;
       justify-content: center;
       align-items: center;
-      background: none; /* ★★★ 修正点: 背景をなくす ★★★ */
+      background: none;
     }
     video, canvas {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       object-fit: cover; transform: scaleX(-1);
-      border-radius: 15px; /* 動画自体には角丸を残す */
+      border-radius: 15px;
     }
     canvas { z-index: 10; pointer-events: none; }
 
@@ -182,6 +182,10 @@
       box-sizing: border-box; 
       background: var(--content-bg); 
       overflow-y: auto;
+    }
+    /* ★★★ 最終修正点: ギャラリー画面のレイアウトを上書き ★★★ */
+    #album-mode.active {
+      display: block;
     }
     #album-gallery { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 15px; width: 100%; }
     .gallery-item {
