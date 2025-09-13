@@ -47,13 +47,13 @@
     /* --- ヘッダー: タブ --- */
     header {
       flex-shrink: 0;
-      padding: 20px 15px 10px;
+      padding: 15px 15px 10px; /* 上の余白を少し詰める */
     }
     #tab-selector {
       display: flex;
       width: 100%;
       background-color: var(--tab-container-bg);
-      border-radius: 25px; /* 角丸コンテナ */
+      border-radius: 25px;
       padding: 4px;
       box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
     }
@@ -87,41 +87,47 @@
     .tab-content.active { display: flex; flex-direction: column; }
     
     /* --- カメラモード --- */
+    /* ★★★ 修正点: カメラモード全体をFlexboxコンテナとして設定 ★★★ */
     #camera-mode {
-      justify-content: flex-start; /* 上から配置 */
+      height: 100%;
+      display: flex;
+      flex-direction: column;
       text-align: center;
     }
     .camera-ui-top {
-      padding: 20px;
+      padding: 10px 20px; /* 上下の余白を詰める */
       flex-shrink: 0;
     }
     .instruction-text {
       font-size: 16px;
       color: var(--text-muted-color);
-      margin-bottom: 20px;
+      margin-bottom: 12px; /* 余白を詰める */
     }
     #emotion-selector {
       display: flex;
       justify-content: center;
       gap: 10px;
-      margin-bottom: 15px;
+      margin-bottom: 12px; /* 余白を詰める */
       width: 100%;
-      flex-wrap: wrap; /* ★★★ 修正点: ボタンを折り返すように変更 ★★★ */
+      flex-wrap: wrap; 
     }
     .emotion-button {
       background-color: var(--emotion-button-bg);
       color: var(--button-text-color);
       border: none;
       border-radius: 25px;
-      padding: 10px 18px;
+      padding: 8px 10px; /* ★★★ 修正点: ボタンの余白を調整 ★★★ */
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center; /* テキストと絵文字を中央寄せ */
+      gap: 5px;
       transition: all 0.2s;
       flex-shrink: 0; 
+      width: calc(33.33% - 10px); /* ★★★ 修正点: 横3列になるように幅を指定 ★★★ */
+      box-sizing: border-box;
     }
     .emotion-button.active {
       background-color: var(--emotion-button-active-bg);
@@ -132,17 +138,14 @@
       font-size: 18px;
       font-weight: bold;
       color: var(--text-color);
-      height: 25px; /* レイアウトが崩れないように高さを確保 */
+      height: 22px; /* 高さを詰める */
     }
-    #realtime-display { display: none; } /* このUIでは使用しないため非表示 */
+    #realtime-display { display: none; }
 
-    /* 下部シート */
+    /* ★★★ 修正点: 下部シートのレイアウト方式を変更 ★★★ */
     .bottom-sheet {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      /* 高さを調整して、上のボタンと重ならないように */
-      height: calc(100% - 240px);
-      min-height: 300px;
+      flex-grow: 1; /* 残りの高さをすべて埋める */
+      min-height: 0; /* Flexboxの子要素が縮小できるように */
       background: var(--content-bg);
       border-top-left-radius: 24px;
       border-top-right-radius: 24px;
@@ -170,7 +173,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: #e9ecef; /* カメラ起動前の背景 */
+      background: #e9ecef;
     }
     video, canvas {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -182,12 +185,8 @@
     #album-mode { padding: 20px; box-sizing: border-box; background: var(--content-bg); }
     #album-gallery { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 15px; width: 100%; }
     .gallery-item {
-      background-color: #f1f1f1;
-      border-radius: 10px;
-      overflow: hidden;
-      width: calc(50% - 7.5px); /* 2列表示 */
-      cursor: pointer;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      background-color: #f1f1f1; border-radius: 10px; overflow: hidden;
+      width: calc(50% - 7.5px); cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     .gallery-item img { width: 100%; height: 120px; object-fit: cover; display: block; }
     .gallery-info { padding: 8px; font-size: 12px; text-align: center; }
@@ -268,7 +267,6 @@
     const modal = document.getElementById('modal'), modalImg = document.getElementById('modal-content'), modalCaption = document.getElementById('modal-caption'), modalClose = document.getElementById('modal-close'), modalDownload = document.getElementById('modal-download'), modalDelete = document.getElementById('modal-delete');
     
     let targetEmotion = null, isCapturing = false, photos = [];
-    // ★★★ 修正点: プロンプトメッセージを追加 ★★★
     const emotionPrompts = {
         "happy": "最高の笑顔で！ 😄", 
         "sad": "悲しい顔をして… 😔", 
