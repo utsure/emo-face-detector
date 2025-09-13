@@ -33,34 +33,34 @@
       "neutral": "😐", "happy": "😊", "sad": "😔", "angry": "😠", "surprised": "😮", "fearful": "😨", "disgusted": "🤢", "No Face": "🤔"
     };
 
-    // AIモデルの読み込み
-    async function loadModels() {
-      // face-api.jsに必要なモデルファイルを 'models' フォルダから読み込む
-      await Promise.all([
-        faceapi.nets.tinyFaceDetector.loadFromUri('./models'),
-        faceapi.nets.faceLandmark68Net.loadFromUri('./models'),
-        faceapi.nets.faceRecognitionNet.loadFromUri('./models'), // これは通常顔認識用ですが、念のため
-        faceapi.nets.faceExpressionNet.loadFromUri('./models')  // ★感情認識のメインモデル
-      ]);
+    // --- 1. モデルを読み込む ---
+    Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri('./models'),
+      faceapi.nets.faceLandmark68Net.loadFromUri('./models'),
+      faceapi.nets.faceExpressionNet.loadFromUri('./models')
+    ]).then(startVideo)
+      .catch(err => {
+        console.error("AIモデルの読み込みに失敗しました: ", err);
+        infoText.innerText = "エラー: AIモデル読込失敗。modelsフォルダを確認してください。";
+        emojiDisplay.innerText = "📁❓";
+      });
+
+    // --- 2. カメラを起動する ---
+    function startVideo() {
       infoText.innerText = "カメラにアクセス中...";
       emojiDisplay.innerText = "📷";
-      startVideo();
-    }
-
-    // カメラの起動
-    function startVideo() {
       navigator.mediaDevices.getUserMedia({ video: {} })
         .then(stream => {
           video.srcObject = stream;
         })
         .catch(err => {
-          console.error("カメラエラー: ", err);
-          infoText.innerText = "エラー: カメラ起動に失敗";
+          console.error("カメラの起動に失敗しました: ", err);
+          infoText.innerText = "エラー: カメラ起動失敗。サイトの許可を確認してください。";
           emojiDisplay.innerText = "🚫";
         });
     }
 
-    // ビデオが再生開始されたら、感情認識ループを開始
+    // --- 3. 認識ループを開始する ---
     video.addEventListener('play', () => {
       const canvas = faceapi.createCanvasFromMedia(video);
       document.getElementById('video-container').append(canvas);
@@ -73,17 +73,12 @@
       setInterval(async () => {
         const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions();
         
-        // 描画をクリア
         canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
         
         if (detections && detections.length > 0) {
           const resizedDetections = faceapi.resizeResults(detections, displaySize);
-          
-          // 顔の周りのボックスとランドマークを描画 (確認用)
           faceapi.draw.drawDetections(canvas, resizedDetections);
-          faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
           
-          // 感情を取得して表示
           let highestEmotion = "neutral";
           let highestValue = 0;
           const expressions = resizedDetections[0].expressions;
@@ -102,11 +97,8 @@
           infoText.innerText = "顔を検出中...";
           emojiDisplay.innerText = "🤔";
         }
-      }, 100); // 100ミリ秒ごとに認識
+      }, 200); // 認識間隔を少し長くしてスマホの負荷を軽減
     });
-
-    // 最初にモデルを読み込む
-    loadModels();
   </script>
 </body>
 </html>
