@@ -11,31 +11,33 @@
       --emotion-button-active-bg: #343a40; --button-text-color: #ffffff; --accent-color: #0d6efd;
     }
     html, body { height: 100%; margin: 0; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing: antialiased; }
-    body { background: var(--base-bg); color: var(--text-color); display: flex; justify-content: center; align-items: center; }
-    
-    #app-container { display: flex; flex-direction: column; height: 100%; width: 100%; background: var(--base-bg); position: relative; }
-    .right-pane { flex-shrink: 0; padding: 15px; display: flex; flex-direction: column; }
-    .left-pane { flex-grow: 1; min-height: 0; position: relative; }
+    body { background: var(--base-bg); color: var(--text-color); display: flex; justify-content: center; }
+    #app-container { display: flex; flex-direction: column; height: 100%; width: 100%; max-width: 420px; margin: 0 auto; background: var(--base-bg); position: relative; }
+    header { flex-shrink: 0; padding: 15px 15px 10px; }
     #tab-selector { display: flex; width: 100%; background-color: var(--tab-container-bg); border-radius: 25px; padding: 4px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1); }
     .tab-button { flex-grow: 1; padding: 10px 0; background: transparent; color: var(--text-muted-color); border: none; font-size: 16px; cursor: pointer; border-radius: 22px; font-weight: 500; transition: all 0.2s ease-in-out; }
     .tab-button.active { background-color: var(--content-bg); color: var(--text-color); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    
-    .right-pane > main { flex-grow: 1; overflow-y: auto; min-height: 0; }
+    main { flex-grow: 1; position: relative; overflow-y: auto; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-
-    .camera-ui-top { padding: 10px 0; }
+    
+    #camera-mode { display: flex; flex-direction: column; text-align: center; }
+    #camera-mode.active { height: 100%; }
+    .camera-ui-top { padding: 10px 20px; flex-shrink: 0; }
     .instruction-text { font-size: 16px; color: var(--text-muted-color); margin-bottom: 12px; }
+    
     .emotion-buttons-panel { display: flex; justify-content: center; gap: 10px; margin-bottom: 12px; width: 100%; flex-wrap: wrap; }
     .emotion-button { background-color: var(--emotion-button-bg); color: var(--button-text-color); border: none; border-radius: 25px; padding: 8px 10px; font-size: 14px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 5px; transition: all 0.2s; flex-shrink: 0; width: calc(33.33% - 10px); box-sizing: border-box; }
     .emotion-button.active { background-color: var(--emotion-button-active-bg); box-shadow: 0 4px 12px rgba(0,0,0,0.2); transform: translateY(-2px); }
     .emotion-button.all-btn { width: auto; padding-left: 18px; padding-right: 18px; }
-    #target-info { font-size: 18px; font-weight: bold; color: var(--text-color); height: 22px; }
 
-    #video-container { position: relative; width: 100%; height: 100%; border-radius: 15px; overflow: hidden; background-color: #e0e0e0; }
-    video, canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+    #target-info { font-size: 18px; font-weight: bold; color: var(--text-color); height: 22px; }
+    .bottom-sheet { flex-grow: 1; min-height: 0; background: var(--content-bg); border-top-left-radius: 24px; border-top-right-radius: 24px; box-shadow: 0 -5px 20px rgba(0,0,0,0.08); display: flex; flex-direction: column; align-items: center; padding: 0; box-sizing: border-box; }
+    #video-container { position: relative; width: 100%; height: 100%; border-radius: 0; overflow: hidden; flex-grow: 1; display: flex; justify-content: center; align-items: center; background: none; }
+    video, canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); border-radius: 15px; }
     canvas { z-index: 10; pointer-events: none; }
     
+    #album-mode { padding: 20px; box-sizing: border-box; background: var(--content-bg); }
     #album-gallery { display: grid; gap: 15px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
     .gallery-item { background-color: #f1f1f1; border-radius: 10px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     .gallery-item img { width: 100%; height: 120px; object-fit: cover; display: block; }
@@ -44,81 +46,129 @@
     
     #modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); justify-content: center; align-items: center; }
     #modal-content { display: block; max-width: 90vw; max-height: 80vh; border-radius: 10px; }
-    
-    @media (max-width: 1023px) {
-      #app-container { max-width: 420px; }
-      #camera-mode.active { display: flex; flex-direction: column; height: 100%; }
-      .camera-ui-top { flex-shrink: 0; }
-      .left-pane { flex-grow: 1; min-height: 0; background: var(--content-bg); border-top-left-radius: 24px; border-top-right-radius: 24px; box-shadow: 0 -5px 20px rgba(0,0,0,0.08); padding: 15px; box-sizing: border-box; }
-      .left-pane { display: none; }
-      .left-pane.active { display: block; }
-    }
+    #modal-caption { margin: 10px auto; display: block; width: 80%; text-align: center; color: #ccc; padding: 10px 0; font-size: 16px; }
+    #modal-close, #modal-download, #modal-delete { position: absolute; top: 15px; color: #f1f1f1; font-size: 30px; cursor: pointer; background: rgba(0,0,0,0.5); border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; }
+    #modal-close { right: 15px; }
+    #modal-download { right: 70px; font-size: 24px; padding-top: 5px;}
+    #modal-delete { right: 125px; font-size: 24px; padding-top: 5px;}
 
+    /* ★★★ 修正点: デスクトップ用レイアウトを追加 ★★★ */
     @media (min-width: 1024px) {
+      body { align-items: center; }
       #app-container {
-        display: grid; grid-template-columns: 2fr 1fr; height: 90vh;
-        max-width: 1400px; width: 95%; gap: 20px; padding: 20px; box-sizing: border-box;
+        display: grid;
+        grid-template-columns: 2fr 420px; /* 左(カメラ):右(操作)=可変:固定 */
+        grid-template-rows: 1fr;
+        height: 90vh;
+        max-width: 1400px;
+        width: 95vw;
+        gap: 20px;
+        background: transparent;
       }
-      .left-pane, .right-pane {
-        border-radius: 20px; background: var(--content-bg);
-        box-shadow: 0 8px 30px rgba(0,0,0,0.1); padding: 20px;
+      header {
+        grid-area: header;
+        padding: 0 0 15px 0;
       }
-      .left-pane { padding: 0; }
-      #album-mode { height: 100%; display: flex; flex-direction: column; }
-      #album-gallery { flex-grow: 1; overflow-y: auto; }
+      main {
+        grid-area: main;
+        overflow-y: auto;
+        display: flex; /* 子要素の高さを100%にするため */
+      }
+      /* 右側の操作パネルを1つのコンテナとして扱う */
+      #right-pane-wrapper {
+        display: flex;
+        flex-direction: column;
+        background: var(--base-bg);
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        overflow: hidden;
+      }
+      #camera-mode, #album-mode {
+        background-color: transparent;
+      }
+      /* 左側のカメラ映像 */
+      #video-wrapper {
+        grid-area: video;
+        background: black;
+        border-radius: 20px;
+        overflow: hidden;
+        height: 100%;
+        position: relative;
+      }
+      #video-wrapper .bottom-sheet {
+        position: absolute;
+        inset: 0;
+        border-radius: 0;
+        box-shadow: none;
+        background: transparent;
+      }
+      #video-wrapper video, #video-wrapper canvas {
+        border-radius: 0;
+      }
+
+      /* HTML構造をCSSで再配置 */
+      #app-container {
+        grid-template-areas: "video controls";
+      }
+      #video-wrapper { grid-area: video; }
+      #right-pane-wrapper { grid-area: controls; }
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 </head>
 <body>
-  <div id="app-container">
-    <div class="left-pane active">
-      <div id="video-container">
-          <video id="input_video" autoplay muted playsinline></video>
-          <canvas id="output_canvas"></canvas>
+  <div id="video-wrapper">
+    <div id="app-container">
+      <div id="right-pane-wrapper">
+        <header>
+          <div id="tab-selector">
+            <button class="tab-button active" data-tab="camera-mode">カメラ</button>
+            <button class="tab-button" data-tab="album-mode">ギャラリー</button>
+          </div>
+        </header>
+        <main>
+          <div id="camera-mode" class="tab-content active">
+            <div class="camera-ui-top">
+                <p class="instruction-text">感情を選んで撮影しよう</p>
+                <div id="emotion-selector" class="emotion-buttons-panel">
+                  <button class="emotion-button" data-emotion="happy">😀 Happy</button>
+                  <button class="emotion-button" data-emotion="sad">😢 Sad</button>
+                  <button class="emotion-button" data-emotion="surprised">😲 Surprised</button>
+                  <button class="emotion-button" data-emotion="angry">😠 Angry</button>
+                  <button class="emotion-button" data-emotion="disgusted">🤢 Disgusted</button>
+                  <button class="emotion-button" data-emotion="neutral">😐 Neutral</button>
+                </div>
+                <div id="target-info"></div>
+            </div>
+            <div class="bottom-sheet">
+                <div id="video-container">
+                    <video id="input_video" autoplay muted playsinline></video>
+                    <canvas id="output_canvas"></canvas>
+                </div>
+            </div>
+          </div>
+          <div id="album-mode" class="tab-content">
+            <div id="emotion-filter" class="emotion-buttons-panel">
+                <button class="emotion-button all-btn active" data-emotion="all">📂 すべて</button>
+                <button class="emotion-button" data-emotion="happy">😀</button>
+                <button class="emotion-button" data-emotion="sad">😢</button>
+                <button class="emotion-button" data-emotion="surprised">😲</button>
+                <button class="emotion-button" data-emotion="angry">😠</button>
+                <button class="emotion-button" data-emotion="disgusted">🤢</button>
+                <button class="emotion-button" data-emotion="neutral">😐</button>
+            </div>
+            <div id="album-gallery"></div>
+          </div>
+        </main>
       </div>
     </div>
-
-    <div class="right-pane">
-      <header>
-        <div id="tab-selector">
-          <button class="tab-button active" data-tab="camera-mode">カメラ</button>
-          <button class="tab-button" data-tab="album-mode">ギャラリー</button>
-        </div>
-      </header>
-
-      <main>
-        <div id="camera-mode" class="tab-content active">
-          <div class="camera-ui-top">
-              <p class="instruction-text">感情を選んで撮影しよう</p>
-              <div id="emotion-selector" class="emotion-buttons-panel">
-                <button class="emotion-button" data-emotion="happy">😀 Happy</button>
-                <button class="emotion-button" data-emotion="sad">😢 Sad</button>
-                <button class="emotion-button" data-emotion="surprised">😲 Surprised</button>
-                <button class="emotion-button" data-emotion="angry">😠 Angry</button>
-                <button class="emotion-button" data-emotion="disgusted">🤢 Disgusted</button>
-                <button class="emotion-button" data-emotion="neutral">😐 Neutral</button>
-              </div>
-              <div id="target-info"></div>
-          </div>
-        </div>
-        <div id="album-mode" class="tab-content">
-          <div id="emotion-filter" class="emotion-buttons-panel">
-              <button class="emotion-button all-btn active" data-emotion="all">📂 すべて</button>
-              <button class="emotion-button" data-emotion="happy">😀</button>
-              <button class="emotion-button" data-emotion="sad">😢</button>
-              <button class="emotion-button" data-emotion="surprised">😲</button>
-              <button class="emotion-button" data-emotion="angry">😠</button>
-              <button class="emotion-button" data-emotion="disgusted">🤢</button>
-              <button class="emotion-button" data-emotion="neutral">😐</button>
-          </div>
-          <div id="album-gallery"></div>
-        </div>
-      </main>
-    </div>
   </div>
-  <div id="modal">...</div>
-  
+
+  <div id="modal">
+    <span id="modal-close">&times;</span> <span id="modal-delete">🗑️</span> <a id="modal-download">⬇️</a>
+    <img id="modal-content"> <div id="modal-caption"></div>
+  </div>
   <script>
     const video = document.getElementById('input_video');
     const targetInfo = document.getElementById('target-info');
@@ -127,13 +177,13 @@
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
     const albumGallery = document.getElementById('album-gallery');
-    const leftPane = document.querySelector('.left-pane');
-    const rightPane = document.querySelector('.right-pane'); // 右パネルを取得
-    const modal = document.getElementById('modal');
+    const modal = document.getElementById('modal'), modalImg = document.getElementById('modal-content'), modalCaption = document.getElementById('modal-caption');
+    const modalClose = document.getElementById('modal-close'), modalDownload = document.getElementById('modal-download'), modalDelete = document.getElementById('modal-delete');
     
+    // ★★★ 修正点: JSロジックを簡素化 ★★★
     let targetEmotion = null, isCapturing = false, currentPhotoIndex = null, currentFilter = 'all';
     const emotionPrompts = {"happy": "最高の笑顔で！ 😄", "sad": "悲しい顔をして… 😔", "angry": "怒った顔！ 😠", "surprised": "驚いた顔で！ 😮", "disgusted": "嫌悪の表情で… 🤢", "neutral": "無表情で。 😐"};
-    const emotionEmojis = {"neutral": "😐", "happy": "😊", "sad": "😔", "angry": "😠", "surprised": "😮", "disgusted": "🤢"};
+    const emotionEmojis = {"neutral": "😐", "happy": "😊", "sad": "😔", "angry": "😠", "surprised": "😮", "fearful": "😨", "disgusted": "🤢"};
     const PHOTO_STORAGE_KEY = 'emotionPhotos';
 
     function getPhotosFromStorage() { try { const d = localStorage.getItem(PHOTO_STORAGE_KEY); return d ? JSON.parse(d) : []; } catch (e) { return []; } }
@@ -141,43 +191,13 @@
     
     function renderAlbum(filterEmotion = 'all') { /* ...変更なし... */ }
     
-    Promise.all([ faceapi.nets.tinyFaceDetector.loadFromUri('./models'), faceapi.nets.faceLandmark68Net.loadFromUri('./models'), faceapi.nets.faceExpressionNet.loadFromUri('./models') ]).then(setupCamera).catch(err => { targetInfo.innerText = "エラー: モデル読込失敗"; });
+    Promise.all([ faceapi.nets.tinyFaceDetector.loadFromUri('./models'), faceapi.nets.faceLandmark68Net.loadFromUri('./models'), faceapi.nets.faceExpressionNet.loadFromUri('./models') ]).then(setupCamera).catch(err => { targetInfo.innerText = "エラー: AIモデル読込失敗"; });
     function setupCamera() { /* ...変更なし... */ }
     function stopVideo() { /* ...変更なし... */ }
     function takePhoto(detectedEmotion) { /* ...変更なし... */ }
     video.addEventListener('play', () => { /* ...変更なし... */ });
-    
-    // ★★★ 修正点: イベント処理の仕組みを修正 ★★★
-    function handleCameraEmotionSelect(button) {
-        if (!button || isCapturing) return;
-        if (targetEmotion === button.dataset.emotion) {
-            targetEmotion = null; button.classList.remove('active'); targetInfo.innerText = "";
-        } else {
-            targetEmotion = button.dataset.emotion; targetInfo.innerText = emotionPrompts[targetEmotion];
-            emotionSelector.querySelectorAll('.emotion-button').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-        }
-    }
-
-    function handleGalleryFilter(button) {
-        if (!button) return;
-        currentFilter = button.dataset.emotion;
-        emotionFilter.querySelectorAll('.emotion-button').forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-        renderAlbum(currentFilter);
-    }
-    
-    rightPane.addEventListener('click', (event) => {
-        const button = event.target.closest('.emotion-button');
-        if (!button) return;
-
-        const panel = button.closest('.emotion-buttons-panel');
-        if (panel.id === 'emotion-selector') {
-            handleCameraEmotionSelect(button);
-        } else if (panel.id === 'emotion-filter') {
-            handleGalleryFilter(button);
-        }
-    });
+    emotionSelector.addEventListener('click', (event) => { /* ...変更なし... */ });
+    emotionFilter.addEventListener('click', (event) => { /* ...変更なし... */ });
 
     tabButtons.forEach(button => {
       button.addEventListener('click', () => {
@@ -187,38 +207,27 @@
         button.classList.add('active');
         document.getElementById(targetTab).classList.add('active');
         
+        // デスクトップでは常にカメラを止めない
         if (window.innerWidth < 1024) {
-            leftPane.classList.toggle('active', targetTab === 'camera-mode');
-            if (targetTab === 'album-mode') {
-                stopVideo();
-            } else {
-                setupCamera();
-            }
+          if (targetTab === 'album-mode') stopVideo(); else setupCamera();
         }
         
         if (targetTab === 'album-mode') {
           currentFilter = 'all'; 
-          emotionFilter.querySelectorAll('.emotion-button').forEach(btn => btn.classList.toggle('active', btn.dataset.emotion === 'all'));
+          emotionFilter.querySelectorAll('.emotion-button').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.emotion === 'all');
+          });
           renderAlbum(currentFilter);
         }
       });
     });
 
     function openModal(photo, index) { /* ...変更なし... */ }
-    // modalClose, modalDeleteのロジックは変更なし
+    modalClose.onclick = () => { /* ...変更なし... */ };
+    modalDelete.onclick = () => { /* ...変更なし... */ };
     
-    const checkInitialLayout = () => {
-        const initialTab = document.querySelector('.tab-button.active').dataset.tab;
-        if (window.innerWidth >= 1024 || initialTab === 'camera-mode') {
-            leftPane.classList.add('active');
-            setupCamera();
-        } else {
-            leftPane.classList.remove('active');
-            stopVideo();
-        }
-    };
-    checkInitialLayout();
-    window.addEventListener('resize', checkInitialLayout);
+    // 初期化
+    setupCamera();
 
     // --- 省略した関数の実装 ---
     function renderAlbum(filterEmotion = 'all') {
@@ -239,9 +248,17 @@
         });
         albumGallery.appendChild(fragment);
     }
+    function setupCamera() {
+        if (video.srcObject) return;
+        targetInfo.innerText = "カメラにアクセス中...📷";
+        navigator.mediaDevices.getUserMedia({ video: {} })
+            .then(stream => { video.srcObject = stream; targetInfo.innerText = ""; })
+            .catch(err => { targetInfo.innerText = "エラー: カメラ起動失敗🚫"; });
+    }
+    function stopVideo() { if (video.srcObject) { video.srcObject.getTracks().forEach(t => t.stop()); video.srcObject = null; } }
     function takePhoto(detectedEmotion) {
         const canvas = document.createElement('canvas'); canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d'); ctx.translate(canvas.w, 0); ctx.scale(-1, 1); ctx.drawImage(video, 0, 0, canvas.w, canvas.h);
+        const ctx = canvas.getContext('2d'); ctx.translate(canvas.width, 0); ctx.scale(-1, 1); ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.9); const currentPhotos = getPhotosFromStorage();
         currentPhotos.push({ dataUrl, emotion: detectedEmotion, timestamp: new Date().toISOString() });
         savePhotosToStorage(currentPhotos); isCapturing = true; targetInfo.innerText = "撮影しました！✅";
@@ -264,18 +281,33 @@
         }
       }, 300);
     });
+    emotionSelector.addEventListener('click', (event) => {
+        const button = event.target.closest('.emotion-button');
+        if (!button || isCapturing) return;
+        if (targetEmotion === button.dataset.emotion) {
+            targetEmotion = null; button.classList.remove('active'); targetInfo.innerText = "";
+        } else {
+            targetEmotion = button.dataset.emotion; targetInfo.innerText = emotionPrompts[targetEmotion];
+            emotionSelector.querySelectorAll('.emotion-button').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+        }
+    });
+    emotionFilter.addEventListener('click', (event) => {
+        const button = event.target.closest('.emotion-button');
+        if (!button) return;
+        currentFilter = button.dataset.emotion;
+        emotionFilter.querySelectorAll('.emotion-button').forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        renderAlbum(currentFilter);
+    });
     function openModal(photo, index) {
-        const modalContent = document.getElementById('modal-content');
-        const modalCaption = document.getElementById('modal-caption');
-        const modalDownload = document.getElementById('modal-download');
-        const modalDelete = document.getElementById('modal-delete');
-        modal.style.display = 'flex'; modalContent.src = photo.dataUrl;
+        modal.style.display = 'flex'; modalImg.src = photo.dataUrl;
         modalCaption.innerHTML = `<span class="emotion-label">${emotionEmojis[photo.emotion] || ''} ${photo.emotion}</span><br>${new Date(photo.timestamp).toLocaleString()}`;
         modalDownload.href = photo.dataUrl; modalDownload.download = `photo_${photo.emotion}_${new Date(photo.timestamp).toISOString()}.jpg`;
         currentPhotoIndex = index;
     }
-    document.getElementById('modal-close').onclick = () => modal.style.display = 'none';
-    document.getElementById('modal-delete').onclick = () => {
+    modalClose.onclick = () => modal.style.display = 'none';
+    modalDelete.onclick = () => {
         if (confirm('この写真を削除しますか？')) {
             const photos = getPhotosFromStorage();
             photos.splice(currentPhotoIndex, 1);
