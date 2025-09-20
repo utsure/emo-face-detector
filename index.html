@@ -12,7 +12,12 @@
     }
     html, body { height: 100%; margin: 0; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing: antialiased; }
     body { background: var(--base-bg); color: var(--text-color); display: flex; justify-content: center; }
-    #app-container { display: flex; flex-direction: column; height: 100%; width: 100%; max-width: 420px; margin: 0 auto; background: var(--base-bg); position: relative; }
+    #app-container {
+      display: flex; flex-direction: column; height: 100%; width: 100%;
+      max-width: 420px; /* ★★★ 修正点: 基本はスマホ幅に固定 ★★★ */
+      margin: 0 auto; background: var(--base-bg); position: relative;
+      transition: max-width 0.3s ease-in-out; /* 幅が変わる際のアニメーション */
+    }
     header { flex-shrink: 0; padding: 15px 15px 10px; }
     #tab-selector { display: flex; width: 100%; background-color: var(--tab-container-bg); border-radius: 25px; padding: 4px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1); }
     .tab-button { flex-grow: 1; padding: 10px 0; background: transparent; color: var(--text-muted-color); border: none; font-size: 16px; cursor: pointer; border-radius: 22px; font-weight: 500; transition: all 0.2s ease-in-out; }
@@ -23,42 +28,44 @@
     
     #camera-mode { display: flex; flex-direction: column; text-align: center; }
     #camera-mode.active { height: 100%; }
-    .camera-ui-top { padding: 10px 20px; flex-shrink: 0; }
-    .instruction-text { font-size: 16px; color: var(--text-muted-color); margin-bottom: 12px; }
+    .camera-ui-top {
+      padding: 5px 20px; /* ★★★ 修正点: 上下の余白を縮小し、カメラ画面を拡大 ★★★ */
+      flex-shrink: 0;
+    }
+    .instruction-text { font-size: 16px; color: var(--text-muted-color); margin-bottom: 10px; }
     
-    .emotion-buttons-panel { display: flex; justify-content: center; gap: 10px; margin-bottom: 12px; width: 100%; flex-wrap: wrap; }
+    .emotion-buttons-panel { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; width: 100%; flex-wrap: wrap; }
     .emotion-button { background-color: var(--emotion-button-bg); color: var(--button-text-color); border: none; border-radius: 25px; padding: 8px 10px; font-size: 14px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 5px; transition: all 0.2s; flex-shrink: 0; width: calc(33.33% - 10px); box-sizing: border-box; }
     .emotion-button.active { background-color: var(--emotion-button-active-bg); box-shadow: 0 4px 12px rgba(0,0,0,0.2); transform: translateY(-2px); }
     .emotion-button.all-btn { width: auto; padding-left: 18px; padding-right: 18px; }
 
-    #target-info { font-size: 18px; font-weight: bold; color: var(--text-color); height: 22px; }
+    #target-info { font-size: 18px; font-weight: bold; color: var(--text-color); height: 22px; margin-bottom: 5px; }
     .bottom-sheet { flex-grow: 1; min-height: 0; background: var(--content-bg); border-top-left-radius: 24px; border-top-right-radius: 24px; box-shadow: 0 -5px 20px rgba(0,0,0,0.08); display: flex; flex-direction: column; align-items: center; padding: 0; box-sizing: border-box; }
     #video-container { position: relative; width: 100%; height: 100%; border-radius: 0; overflow: hidden; flex-grow: 1; display: flex; justify-content: center; align-items: center; background: none; }
     video, canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); border-radius: 15px; }
     canvas { z-index: 10; pointer-events: none; }
     
     #album-mode { padding: 20px; box-sizing: border-box; background: var(--content-bg); }
-    #album-gallery { display: grid; gap: 15px; width: 100%; }
-
-    /* ★★★ 修正点: レスポンシブデザイン対応 ★★★ */
-    @media (max-width: 599px) {
-        #album-gallery { grid-template-columns: repeat(2, 1fr); }
-        #app-container { max-width: 100%; } /* スマホでは幅いっぱいに */
+    #album-gallery {
+      display: grid;
+      gap: 15px;
+      width: 100%;
+      /* ★★★ 修正点: 自動で列数を調整するグリッドレイアウト ★★★ */
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     }
-    @media (min-width: 600px) and (max-width: 899px) {
-        #album-gallery { grid-template-columns: repeat(4, 1fr); }
-        #app-container { max-width: 860px; }
-    }
+    
+    /* ★★★ 修正点: デスクトップでギャラリー表示の時だけ幅を広げる ★★★ */
     @media (min-width: 900px) {
-        #album-gallery { grid-template-columns: repeat(6, 1fr); }
-        #app-container { max-width: 1200px; }
+      #app-container.desktop-gallery-wide {
+        max-width: 1200px;
+      }
     }
 
     .gallery-item { background-color: #f1f1f1; border-radius: 10px; overflow: hidden; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
     .gallery-item img { width: 100%; height: 120px; object-fit: cover; display: block; }
     .gallery-info { padding: 8px; font-size: 12px; text-align: center; }
     .gallery-info .emotion-label { font-weight: bold; color: var(--accent-color); }
-    .no-photos-message { color: var(--text-muted-color); font-size: 18px; text-align: center; width: 100%; padding-top: 40px; }
+    .no-photos-message { color: var(--text-muted-color); font-size: 18px; text-align: center; width: 100%; padding-top: 40px; grid-column: 1 / -1; }
     
     #modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); justify-content: center; align-items: center; }
     #modal-content { display: block; max-width: 90vw; max-height: 80vh; border-radius: 10px; }
@@ -118,6 +125,7 @@
     <img id="modal-content"> <div id="modal-caption"></div>
   </div>
   <script>
+    const appContainer = document.getElementById('app-container'); // ★★★ 修正点: 追加 ★★★
     const video = document.getElementById('input_video');
     const targetInfo = document.getElementById('target-info');
     const emotionSelector = document.getElementById('emotion-selector');
@@ -128,40 +136,23 @@
     const modal = document.getElementById('modal'), modalImg = document.getElementById('modal-content'), modalCaption = document.getElementById('modal-caption');
     const modalClose = document.getElementById('modal-close'), modalDownload = document.getElementById('modal-download'), modalDelete = document.getElementById('modal-delete');
     
-    let targetEmotion = null;
-    let isCapturing = false;
-    let currentPhotoIndex = null;
-    let currentFilter = 'all';
-    const emotionPrompts = {
-        "happy": "最高の笑顔で！ 😄", "sad": "悲しい顔をして… 😔", "angry": "怒った顔！ 😠", 
-        "surprised": "驚いた顔で！ 😮", "disgusted": "嫌悪の表情で… 🤢", "neutral": "無表情で。 😐"
-    };
+    let targetEmotion = null, isCapturing = false, currentPhotoIndex = null, currentFilter = 'all';
+    const emotionPrompts = {"happy": "最高の笑顔で！ 😄", "sad": "悲しい顔をして… 😔", "angry": "怒った顔！ 😠", "surprised": "驚いた顔で！ 😮", "disgusted": "嫌悪の表情で… 🤢", "neutral": "無表情で。 😐"};
     const emotionEmojis = {"neutral": "😐", "happy": "😊", "sad": "😔", "angry": "😠", "surprised": "😮", "fearful": "😨", "disgusted": "🤢"};
     const PHOTO_STORAGE_KEY = 'emotionPhotos';
 
-    function getPhotosFromStorage() {
-        try { const data = localStorage.getItem(PHOTO_STORAGE_KEY); return data ? JSON.parse(data) : []; }
-        catch (e) { console.error("ストレージからの写真読み込みに失敗:", e); return []; }
-    }
-    function savePhotosToStorage(photos) {
-        try { localStorage.setItem(PHOTO_STORAGE_KEY, JSON.stringify(photos)); }
-        catch (e) { console.error("写真の保存に失敗:", e); }
-    }
+    function getPhotosFromStorage() { try { const d = localStorage.getItem(PHOTO_STORAGE_KEY); return d ? JSON.parse(d) : []; } catch (e) { return []; } }
+    function savePhotosToStorage(photos) { try { localStorage.setItem(PHOTO_STORAGE_KEY, JSON.stringify(photos)); } catch (e) {} }
     
     function renderAlbum(filterEmotion = 'all') {
         const allPhotos = getPhotosFromStorage();
-        const photosToRender = (filterEmotion === 'all')
-            ? allPhotos
-            : allPhotos.filter(p => p.emotion === filterEmotion);
-
+        const photosToRender = (filterEmotion === 'all') ? allPhotos : allPhotos.filter(p => p.emotion === filterEmotion);
         albumGallery.innerHTML = '';
         if (photosToRender.length === 0) {
-            albumGallery.innerHTML = filterEmotion === 'all'
-                ? '<p class="no-photos-message">まだ写真がありません。</p>'
-                : `<p class="no-photos-message">「${emotionEmojis[filterEmotion] || ''}」の写真はありません。</p>`;
+            const message = filterEmotion === 'all' ? 'まだ写真がありません。' : `「${emotionEmojis[filterEmotion] || ''}」の写真はありません。`;
+            albumGallery.innerHTML = `<p class="no-photos-message">${message}</p>`;
             return;
         }
-        
         const fragment = document.createDocumentFragment();
         photosToRender.slice().reverse().forEach(photo => {
             const originalIndex = allPhotos.findIndex(p => p.timestamp === photo.timestamp);
@@ -187,9 +178,7 @@
             .then(stream => { video.srcObject = stream; targetInfo.innerText = ""; })
             .catch(err => { targetInfo.innerText = "エラー: カメラ起動失敗🚫"; });
     }
-    function stopVideo() {
-        if (video.srcObject) { video.srcObject.getTracks().forEach(t => t.stop()); video.srcObject = null; }
-    }
+    function stopVideo() { if (video.srcObject) { video.srcObject.getTracks().forEach(t => t.stop()); video.srcObject = null; } }
     function takePhoto(detectedEmotion) {
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth; canvas.height = video.videoHeight;
@@ -215,7 +204,7 @@
         const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
         if (detections && detections.length > 0) {
           const expressions = detections[0].expressions;
-          const [highestEmotion, highestValue] = Object.entries(expressions).reduce((acc, [key, value]) => value > acc[1] ? [key, value] : acc, ["", 0]);
+          const [highestEmotion, highestValue] = Object.entries(expressions).reduce((a, [k, v]) => v > a[1] ? [k, v] : a, ["", 0]);
           if (targetEmotion && highestEmotion === targetEmotion && highestValue > 0.8) {
             emotionSelector.querySelectorAll('button').forEach(b => b.disabled = true);
             targetInfo.innerText = `「${targetEmotion}」をキャッチ！`;
@@ -253,15 +242,15 @@
         
         const cameraTopUI = document.querySelector('#camera-mode .camera-ui-top');
         if (targetTab === 'album-mode') {
+          appContainer.classList.add('desktop-gallery-wide'); // ★★★ 修正点: 追加 ★★★
           cameraTopUI.style.display = 'none';
           emotionFilter.style.display = 'flex';
           stopVideo();
           currentFilter = 'all'; 
-          emotionFilter.querySelectorAll('.emotion-button').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.emotion === 'all');
-          });
+          emotionFilter.querySelectorAll('.emotion-button').forEach(btn => btn.classList.toggle('active', btn.dataset.emotion === 'all'));
           renderAlbum(currentFilter);
         } else {
+          appContainer.classList.remove('desktop-gallery-wide'); // ★★★ 修正点: 追加 ★★★
           cameraTopUI.style.display = 'block';
           emotionFilter.style.display = 'none';
           setupCamera();
@@ -285,7 +274,6 @@
         }
     };
 
-    // 初期化処理
     const initialTab = document.querySelector('.tab-button.active').dataset.tab;
     const cameraTopUI = document.querySelector('#camera-mode .camera-ui-top');
     if (initialTab === 'camera-mode') {
